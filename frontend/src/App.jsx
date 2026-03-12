@@ -3,40 +3,45 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
 import { Link } from "react-router";
-import { useState } from "react";
 
 import AppRouter from "./router/AppRouter";
 
 import "./App.css";
+import { useDispatch, useSelector } from "react-redux";
+import { userSelector } from "./redux/selectors/authSelector";
+import { logout } from "./redux/slices/auth";
 
 const Navigation = () => (
   <Box sx={{ display: "flex", justifyContent: "center", gap: 2, my: 4 }}>
-    <Link to="/">Landing</Link>
+    <Link to="/schedule">Schedule</Link>
     <Link to="/doctors">Doctors</Link>
     <Link to="/patients">Patients</Link>
   </Box>
 );
 
 function App() {
-  const [user, setUser] = useState(null);
+  const user = useSelector(userSelector);
+  const dispatch = useDispatch();
 
-  const handleLogin = () =>
-    setUser({ id: "1", name: "robin", role: "admin", permissions: ["all-permissions"] });
-  const handleLogout = () => setUser(null);
+  const handleLogout = () => {
+    dispatch(logout());
+  };
 
   return (
     <>
-      <Typography variant="h3">Vite + React</Typography>
-      <Button sx={{ backgroundColor: "primary.secondary" }} variant="contained">
-        Hello World
-      </Button>
+      <Typography variant="h3">MED System</Typography>
 
-      <Navigation />
+      {user && <Navigation />}
 
-      {user ? (
-        <Button onClick={handleLogout}>Sign Out</Button>
-      ) : (
-        <Button onClick={handleLogin}>Sign In</Button>
+      {user && (
+        <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
+          <Typography variant="h6" sx={{ mr: 2 }}>
+            Welcome, {user.name}
+          </Typography>
+          <Button sx={{ backgroundColor: "primary.secondary" }} onClick={handleLogout}>
+            Sign Out
+          </Button>
+        </Box>
       )}
 
       <AppRouter user={user} />
