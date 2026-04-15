@@ -1,51 +1,59 @@
-import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
 
-import { Link } from "react-router";
+import { useLocation } from "react-router";
 
 import AppRouter from "./router/AppRouter";
+import Sidebar from "./components/core/Sidebar";
+import { useSidebar } from "./components/core/Sidebar/hooks";
+import TopNavbar from "./components/core/TopNavbar";
 
 import "./App.css";
 import { useDispatch, useSelector } from "react-redux";
 import { userSelector } from "./redux/selectors/authSelector";
 import { logout } from "./redux/slices/auth";
 
-const Navigation = () => (
-  <Box sx={{ display: "flex", justifyContent: "center", gap: 2, my: 4 }}>
-    <Link to="/schedule">Schedule</Link>
-    <Link to="/doctors">Doctors</Link>
-    <Link to="/patients">Patients</Link>
-  </Box>
-);
+const pageNames = {
+  "/schedule": "Schedule",
+  "/doctors": "Doctors",
+  "/patients": "Patients",
+};
 
 function App() {
   const user = useSelector(userSelector);
   const dispatch = useDispatch();
+  const { open, toggleSidebar } = useSidebar();
+  const location = useLocation();
+  const pageName = pageNames[location.pathname] || "MED System";
 
   const handleLogout = () => {
     dispatch(logout());
   };
 
   return (
-    <>
-      <Typography variant="h3">MED System</Typography>
-
-      {user && <Navigation />}
-
+    <Box sx={{ display: "flex", height: "100vh" }}>
       {user && (
-        <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
-          <Typography variant="h6" sx={{ mr: 2 }}>
-            Welcome, {user.name}
-          </Typography>
-          <Button sx={{ backgroundColor: "primary.secondary" }} onClick={handleLogout}>
-            Sign Out
-          </Button>
+        <Box
+          sx={{
+            width: open ? 220 : 80,
+            backgroundColor: "#fafafa",
+            borderRight: "1px solid rgba(0, 0, 0, 0.12)",
+            paddingY: 2,
+            transition: "width 0.3s ease",
+            overflowY: "auto",
+          }}
+        >
+          <Sidebar open={open} toggleSidebar={toggleSidebar} />
         </Box>
       )}
 
-      <AppRouter user={user} />
-    </>
+      <Box sx={{ display: "flex", flexDirection: "column", flex: 1 }}>
+        {user && <TopNavbar pageName={pageName} user={user} onLogout={handleLogout} />}
+
+        <Box sx={{ flex: 1, overflow: "auto", paddingX: 3, paddingY: 3 }}>
+          <AppRouter user={user} />
+        </Box>
+      </Box>
+    </Box>
   );
 }
 

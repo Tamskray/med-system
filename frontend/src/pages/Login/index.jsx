@@ -28,8 +28,17 @@ function Login() {
   };
 
   return (
-    <>
-      <Typography variant="h3">Login</Typography>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      <Typography variant="h3" sx={{ marginBottom: 4 }}>
+        Login
+      </Typography>
       <Box sx={loginContainerSx}>
         <TextField
           label="Name"
@@ -55,7 +64,7 @@ function Login() {
           Login
         </Button>
       </Box>
-    </>
+    </Box>
   );
 }
 
