@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
@@ -6,14 +6,17 @@ import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { useDispatch, useSelector } from "react-redux";
 import Table from "../../components/core/Table";
 import Modal from "../../components/core/Modal";
 import SearchInput from "../../components/core/SearchInput";
-import { mockedDoctors } from "./mocked-data";
+import { fetchDoctors, createDoctor, updateDoctor, deleteDoctor } from "../../redux/slices/doctors";
 
 function Doctors() {
+  const dispatch = useDispatch();
+  const { doctors } = useSelector((state) => state.doctors);
+
   const [searchTerm, setSearchTerm] = useState("");
-  const [doctors, setDoctors] = useState(mockedDoctors);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState("create");
   const [formValues, setFormValues] = useState({
@@ -27,10 +30,14 @@ function Doctors() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
+  useEffect(() => {
+    dispatch(fetchDoctors());
+  }, [dispatch]);
+
   const filteredDoctors = useMemo(() => {
     if (!searchTerm.trim()) return doctors;
 
-    return mockedDoctors.filter((doctor) => {
+    return doctors.filter((doctor) => {
       const search = searchTerm.toLowerCase();
       return (
         doctor.name.toLowerCase().includes(search) ||
@@ -91,20 +98,18 @@ function Doctors() {
     }
 
     if (modalMode === "edit") {
-      setDoctors((prev) =>
-        prev.map((doctor) => (doctor.id === formValues.id ? formValues : doctor)),
-      );
+      dispatch(updateDoctor({ id: formValues.id, ...formValues }));
     } else {
-      setDoctors((prev) => {
-        const nextId = prev.length > 0 ? Math.max(...prev.map((doctor) => doctor.id)) + 1 : 1;
-        return [...prev, { ...formValues, id: nextId }];
-      });
+      dispatch(
+        createDoctor({
+          name: formValues.name,
+          specialty: formValues.specialty,
+          experience: formValues.experience,
+          contact: formValues.contact,
+        }),
+      );
     }
 
-    console.log({
-      action: modalMode,
-      data: formValues,
-    });
     setIsModalOpen(false);
   };
 
@@ -120,9 +125,7 @@ function Doctors() {
 
   const handleConfirmDelete = () => {
     if (!deleteTarget) return;
-
-    console.log(`delete doctor with id ${deleteTarget.id}`);
-    setDoctors((prev) => prev.filter((doctor) => doctor.id !== deleteTarget.id));
+    dispatch(deleteDoctor(deleteTarget.id));
     setDeleteTarget(null);
     setIsDeleteModalOpen(false);
   };
