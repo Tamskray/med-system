@@ -1,8 +1,20 @@
+import { supabase } from "../supabase.js";
 import { doctorsDatabase } from "../models/doctors.js";
 
 export class DoctorsService {
-  static getAllDoctors() {
-    return doctorsDatabase;
+  static async getAllDoctors() {
+    const { data: doctors, error } = await supabase
+      .from("doctors_test")
+      .select("*")
+      .order("id", { ascending: true });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    console.log(doctors);
+
+    return doctors;
   }
 
   static getDoctorById(id) {

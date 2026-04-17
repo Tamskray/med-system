@@ -35,6 +35,7 @@ function Doctors() {
   }, [dispatch]);
 
   const filteredDoctors = useMemo(() => {
+    if (!doctors) return [];
     if (!searchTerm.trim()) return doctors;
 
     return doctors.filter((doctor) => {

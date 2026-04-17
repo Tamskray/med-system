@@ -10,7 +10,7 @@ import TableRow from "@mui/material/TableRow";
 import TableSortLabel from "@mui/material/TableSortLabel";
 import { ASC, DESC } from "./constants";
 
-const Table = ({ data, columns, sx = {}, emptyText = "No data available." }) => {
+const Table = ({ data = [], columns, sx = {}, emptyText = "No data available." }) => {
   const [sortBy, setSortBy] = useState(null);
   const [sortOrder, setSortOrder] = useState(ASC);
   const [page, setPage] = useState(0);

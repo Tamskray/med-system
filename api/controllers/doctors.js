@@ -2,11 +2,13 @@ import { DoctorsService } from "../services/doctors.js";
 import logger from "../utils/logger.js";
 
 export class DoctorsController {
-  static getAllDoctors(req, res) {
+  static async getAllDoctors(req, res) {
     try {
-      const doctors = DoctorsService.getAllDoctors();
+      const doctors = await DoctorsService.getAllDoctors();
       logger.info("Fetched all doctors", { count: doctors.length });
-      res.json({ success: true, data: doctors });
+      //   res.json({ success: true, data: doctors });
+      console.log("CONTROLLER DOCTORS:", doctors);
+      res.status(200).json(doctors);
     } catch (error) {
       logger.error("Error fetching doctors", { message: error.message });
       res.status(500).json({ success: false, message: error.message });

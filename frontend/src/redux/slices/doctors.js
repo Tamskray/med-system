@@ -9,7 +9,7 @@ export const fetchDoctors = createAsyncThunk(
       const response = await fetch(`${API_BASE_URL}/doctors`);
       if (!response.ok) throw new Error("Failed to fetch doctors");
       const data = await response.json();
-      return data.data;
+      return data;
     } catch (error) {
       return rejectWithValue(error.message);
     }
