@@ -15,8 +15,7 @@ import PatientsForm from "../Patients/PatientsForm";
 import { PATIENT_FORM_MODES } from "../Patients/constants";
 
 const DAY_START = "08:00";
-const DAY_END = "18:00";
-const AXIS_END = "18:00";
+const DAY_END = "20:00";
 const AXIS_STEP_MINUTES = 60;
 const API_BASE_URL = "http://localhost:5000/api";
 const getTodayIsoDate = () => new Date().toISOString().slice(0, 10);
@@ -31,8 +30,12 @@ const TOTAL_MINUTES = timeToMinutes(DAY_END) - timeToMinutes(DAY_START);
 const TOTAL_GRID_COLUMNS = TOTAL_MINUTES / BASE_SLOT_MINUTES;
 const LEFT_COLUMN_WIDTH = 260;
 const TIMELINE_COLUMN_WIDTH = 38;
+const TIMELINE_GAP = 4;
+const TIMELINE_PADDING_X = 4;
 const TIMELINE_WIDTH = TOTAL_GRID_COLUMNS * TIMELINE_COLUMN_WIDTH;
-const SCHEDULE_TABLE_MIN_WIDTH = LEFT_COLUMN_WIDTH + TIMELINE_WIDTH;
+const TIMELINE_ROW_WIDTH =
+  TIMELINE_WIDTH + (TOTAL_GRID_COLUMNS - 1) * TIMELINE_GAP + TIMELINE_PADDING_X * 2;
+const SCHEDULE_TABLE_MIN_WIDTH = LEFT_COLUMN_WIDTH + TIMELINE_ROW_WIDTH;
 
 const minutesToTime = (minutes) => {
   const normalizedMinutes = ((minutes % (24 * 60)) + 24 * 60) % (24 * 60);
@@ -131,7 +134,8 @@ function Schedule() {
     }, {});
   }, [doctors]);
 
-  const axisHours = useMemo(() => getTimeAxis(DAY_START, AXIS_END), []);
+  // Header must use the same time range as the slot grid to avoid horizontal drift.
+  const axisHours = useMemo(() => getTimeAxis(DAY_START, DAY_END).slice(0, -1), []);
 
   const openBookingModal = (doctor, block) => {
     setSelectedSlot({
@@ -345,11 +349,12 @@ function Schedule() {
           overflowY: "auto",
         }}
       >
-        <Box sx={{ minWidth: SCHEDULE_TABLE_MIN_WIDTH }}>
+        <Box sx={{ width: "max-content", minWidth: SCHEDULE_TABLE_MIN_WIDTH }}>
           <Box
             sx={{
               display: "grid",
-              gridTemplateColumns: `${LEFT_COLUMN_WIDTH}px ${TIMELINE_WIDTH}px`,
+              width: SCHEDULE_TABLE_MIN_WIDTH,
+              gridTemplateColumns: `${LEFT_COLUMN_WIDTH}px ${TIMELINE_ROW_WIDTH}px`,
               borderBottom: "1px solid",
               borderColor: "divider",
               bgcolor: "grey.50",
@@ -364,6 +369,8 @@ function Schedule() {
               sx={{
                 display: "grid",
                 gridTemplateColumns: `repeat(${TOTAL_GRID_COLUMNS}, ${TIMELINE_COLUMN_WIDTH}px)`,
+                columnGap: `${TIMELINE_GAP}px`,
+                px: `${TIMELINE_PADDING_X}px`,
               }}
             >
               {axisHours.map((hour) => {
@@ -395,6 +402,9 @@ function Schedule() {
             <Box key={departmentName}>
               <Box
                 sx={{
+                  width: "100%",
+                  minWidth: SCHEDULE_TABLE_MIN_WIDTH,
+                  boxSizing: "border-box",
                   px: 2,
                   py: 1,
                   bgcolor: "primary.light",
@@ -416,7 +426,8 @@ function Schedule() {
                     key={doctor.id}
                     sx={{
                       display: "grid",
-                      gridTemplateColumns: `${LEFT_COLUMN_WIDTH}px ${TIMELINE_WIDTH}px`,
+                      width: SCHEDULE_TABLE_MIN_WIDTH,
+                      gridTemplateColumns: `${LEFT_COLUMN_WIDTH}px ${TIMELINE_ROW_WIDTH}px`,
                       borderBottom: "1px solid",
                       borderColor: "divider",
                     }}
@@ -447,8 +458,9 @@ function Schedule() {
                       sx={{
                         display: "grid",
                         gridTemplateColumns: `repeat(${TOTAL_GRID_COLUMNS}, ${TIMELINE_COLUMN_WIDTH}px)`,
-                        gap: 0.5,
-                        p: 0.5,
+                        columnGap: `${TIMELINE_GAP}px`,
+                        px: `${TIMELINE_PADDING_X}px`,
+                        py: 4 / 8,
                         bgcolor: "grey.100",
                       }}
                     >
