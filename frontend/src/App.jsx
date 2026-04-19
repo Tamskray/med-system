@@ -1,5 +1,5 @@
 import Box from "@mui/material/Box";
-
+import { Toaster } from "react-hot-toast";
 import { useLocation } from "react-router";
 
 import AppRouter from "./router/AppRouter";
@@ -30,30 +30,33 @@ function App() {
   };
 
   return (
-    <Box sx={{ display: "flex", height: "100vh" }}>
-      {user && (
-        <Box
-          sx={{
-            width: open ? 220 : 80,
-            backgroundColor: "#fafafa",
-            borderRight: "1px solid rgba(0, 0, 0, 0.12)",
-            paddingY: 2,
-            transition: "width 0.3s ease",
-            overflowY: "auto",
-          }}
-        >
-          <Sidebar open={open} toggleSidebar={toggleSidebar} />
-        </Box>
-      )}
+    <>
+      <Toaster position="top-right" reverseOrder={false} gutter={8} />
+      <Box sx={{ display: "flex", height: "100vh" }}>
+        {user && (
+          <Box
+            sx={{
+              width: open ? 220 : 80,
+              backgroundColor: "#fafafa",
+              borderRight: "1px solid rgba(0, 0, 0, 0.12)",
+              paddingY: 2,
+              transition: "width 0.3s ease",
+              overflowY: "auto",
+            }}
+          >
+            <Sidebar open={open} toggleSidebar={toggleSidebar} />
+          </Box>
+        )}
 
-      <Box sx={{ display: "flex", flexDirection: "column", flex: 1 }}>
-        {user && <TopNavbar pageName={pageName} user={user} onLogout={handleLogout} />}
+        <Box sx={{ display: "flex", flexDirection: "column", flex: 1 }}>
+          {user && <TopNavbar pageName={pageName} user={user} onLogout={handleLogout} />}
 
-        <Box sx={{ flex: 1, overflow: "auto", paddingX: 3, paddingY: 3 }}>
-          <AppRouter user={user} />
+          <Box sx={{ flex: 1, overflow: "auto", paddingX: 3, paddingY: 3 }}>
+            <AppRouter user={user} />
+          </Box>
         </Box>
       </Box>
-    </Box>
+    </>
   );
 }
 

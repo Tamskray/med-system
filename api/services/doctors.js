@@ -1,10 +1,14 @@
 import { supabase } from "../supabase.js";
-import { doctorsDatabase } from "../models/doctors.js";
+import { DOCTORS_TABLE } from "../models/doctors.js";
 
 export class DoctorsService {
+  static isNotFoundError(error) {
+    return error?.code === "PGRST116";
+  }
+
   static async getAllDoctors() {
     const { data: doctors, error } = await supabase
-      .from("doctors_test")
+      .from(DOCTORS_TABLE)
       .select("*")
       .order("id", { ascending: true });
 
@@ -12,36 +16,67 @@ export class DoctorsService {
       throw new Error(error.message);
     }
 
-    console.log(doctors);
-
     return doctors;
   }
 
-  static getDoctorById(id) {
-    return doctorsDatabase.find((doctor) => doctor.id === id);
+  static async getDoctorById(id) {
+    const { data: doctor, error } = await supabase
+      .from(DOCTORS_TABLE)
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (error) {
+      if (this.isNotFoundError(error)) return null;
+      throw new Error(error.message);
+    }
+
+    return doctor;
   }
 
-  static createDoctor(data) {
-    const nextId =
-      doctorsDatabase.length > 0 ? Math.max(...doctorsDatabase.map((d) => d.id)) + 1 : 1;
-    const newDoctor = { id: nextId, ...data };
-    doctorsDatabase.push(newDoctor);
+  static async createDoctor(data) {
+    const { data: newDoctor, error } = await supabase
+      .from(DOCTORS_TABLE)
+      .insert([data])
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
     return newDoctor;
   }
 
-  static updateDoctor(id, data) {
-    const index = doctorsDatabase.findIndex((doctor) => doctor.id === id);
-    if (index === -1) return null;
+  static async updateDoctor(id, data) {
+    const { data: updatedDoctor, error } = await supabase
+      .from(DOCTORS_TABLE)
+      .update(data)
+      .eq("id", id)
+      .select()
+      .single();
 
-    doctorsDatabase[index] = { ...doctorsDatabase[index], ...data };
-    return doctorsDatabase[index];
+    if (error) {
+      if (this.isNotFoundError(error)) return null;
+      throw new Error(error.message);
+    }
+
+    return updatedDoctor;
   }
 
-  static deleteDoctor(id) {
-    const index = doctorsDatabase.findIndex((doctor) => doctor.id === id);
-    if (index === -1) return null;
+  static async deleteDoctor(id) {
+    const { data: deletedDoctor, error } = await supabase
+      .from(DOCTORS_TABLE)
+      .delete()
+      .eq("id", id)
+      .select()
+      .single();
 
-    const deletedDoctor = doctorsDatabase.splice(index, 1)[0];
+    if (error) {
+      if (this.isNotFoundError(error)) return null;
+      throw new Error(error.message);
+    }
+
     return deletedDoctor;
   }
 }

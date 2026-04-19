@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { showErrorToast, showSuccessToast } from "../../utils/toast";
 
 const API_BASE_URL = "http://localhost:5000/api";
 
@@ -9,7 +10,7 @@ export const fetchDoctors = createAsyncThunk(
       const response = await fetch(`${API_BASE_URL}/doctors`);
       if (!response.ok) throw new Error("Failed to fetch doctors");
       const data = await response.json();
-      return data;
+      return data.data;
     } catch (error) {
       return rejectWithValue(error.message);
     }
@@ -90,11 +91,13 @@ const doctorsSlice = createSlice({
       })
       .addCase(fetchDoctors.fulfilled, (state, action) => {
         state.isLoading = false;
+        state.error = null;
         state.doctors = action.payload;
       })
       .addCase(fetchDoctors.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
+        showErrorToast(action.payload || "Failed to fetch doctors");
       })
       .addCase(createDoctor.pending, (state) => {
         state.isLoading = true;
@@ -102,11 +105,14 @@ const doctorsSlice = createSlice({
       })
       .addCase(createDoctor.fulfilled, (state, action) => {
         state.isLoading = false;
+        state.error = null;
         state.doctors.push(action.payload);
+        showSuccessToast("Doctor created successfully");
       })
       .addCase(createDoctor.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
+        showErrorToast(action.payload || "Failed to create doctor");
       })
       .addCase(updateDoctor.pending, (state) => {
         state.isLoading = true;
@@ -114,14 +120,17 @@ const doctorsSlice = createSlice({
       })
       .addCase(updateDoctor.fulfilled, (state, action) => {
         state.isLoading = false;
+        state.error = null;
         const index = state.doctors.findIndex((d) => d.id === action.payload.id);
         if (index !== -1) {
           state.doctors[index] = action.payload;
         }
+        showSuccessToast("Doctor updated successfully");
       })
       .addCase(updateDoctor.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
+        showErrorToast(action.payload || "Failed to update doctor");
       })
       .addCase(deleteDoctor.pending, (state) => {
         state.isLoading = true;
@@ -129,11 +138,14 @@ const doctorsSlice = createSlice({
       })
       .addCase(deleteDoctor.fulfilled, (state, action) => {
         state.isLoading = false;
+        state.error = null;
         state.doctors = state.doctors.filter((d) => d.id !== action.payload.id);
+        showSuccessToast("Doctor deleted successfully");
       })
       .addCase(deleteDoctor.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
+        showErrorToast(action.payload || "Failed to delete doctor");
       });
   },
 });

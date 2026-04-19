@@ -8,9 +8,16 @@ import TableHead from "@mui/material/TableHead";
 import TablePagination from "@mui/material/TablePagination";
 import TableRow from "@mui/material/TableRow";
 import TableSortLabel from "@mui/material/TableSortLabel";
+import Loading from "../Loading";
 import { ASC, DESC } from "./constants";
 
-const Table = ({ data = [], columns, sx = {}, emptyText = "No data available." }) => {
+const Table = ({
+  data = [],
+  columns,
+  sx = {},
+  emptyText = "No data available.",
+  isLoading = false,
+}) => {
   const [sortBy, setSortBy] = useState(null);
   const [sortOrder, setSortOrder] = useState(ASC);
   const [page, setPage] = useState(0);
@@ -108,7 +115,15 @@ const Table = ({ data = [], columns, sx = {}, emptyText = "No data available." }
             </TableRow>
           </TableHead>
           <TableBody>
-            {paginatedData.length > 0 ? (
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={columns.length} sx={{ textAlign: "center", py: 4 }}>
+                  <Box sx={{ display: "flex", justifyContent: "center" }}>
+                    <Loading />
+                  </Box>
+                </TableCell>
+              </TableRow>
+            ) : paginatedData.length > 0 ? (
               paginatedData.map((row, index) => (
                 <TableRow key={index}>
                   {columns.map((column) => (
@@ -135,7 +150,7 @@ const Table = ({ data = [], columns, sx = {}, emptyText = "No data available." }
           </TableBody>
         </MuiTable>
       </TableContainer>
-      {sortedData.length > 0 && (
+      {!isLoading && sortedData.length > 0 && (
         <TablePagination
           component="div"
           count={sortedData.length}
@@ -148,7 +163,6 @@ const Table = ({ data = [], columns, sx = {}, emptyText = "No data available." }
           }}
           rowsPerPageOptions={[10, 25, 50]}
           sx={{
-            borderTop: "1px solid rgba(0, 0, 0, 0.12)",
             "& .MuiIconButton-root": {
               "&:focus": { outline: "none" },
             },

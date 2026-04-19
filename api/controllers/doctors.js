@@ -6,19 +6,17 @@ export class DoctorsController {
     try {
       const doctors = await DoctorsService.getAllDoctors();
       logger.info("Fetched all doctors", { count: doctors.length });
-      //   res.json({ success: true, data: doctors });
-      console.log("CONTROLLER DOCTORS:", doctors);
-      res.status(200).json(doctors);
+      res.status(200).json({ success: true, data: doctors });
     } catch (error) {
       logger.error("Error fetching doctors", { message: error.message });
       res.status(500).json({ success: false, message: error.message });
     }
   }
 
-  static getDoctorById(req, res) {
+  static async getDoctorById(req, res) {
     try {
       const { id } = req.params;
-      const doctor = DoctorsService.getDoctorById(Number(id));
+      const doctor = await DoctorsService.getDoctorById(Number(id));
       if (!doctor) {
         logger.warn("Doctor not found", { id });
         return res.status(404).json({ success: false, message: "Doctor not found" });
@@ -31,7 +29,7 @@ export class DoctorsController {
     }
   }
 
-  static createDoctor(req, res) {
+  static async createDoctor(req, res) {
     try {
       const { name, specialty, experience, contact } = req.body;
 
@@ -40,7 +38,7 @@ export class DoctorsController {
         return res.status(400).json({ success: false, message: "All fields are required" });
       }
 
-      const newDoctor = DoctorsService.createDoctor({ name, specialty, experience, contact });
+      const newDoctor = await DoctorsService.createDoctor({ name, specialty, experience, contact });
       logger.info("Doctor created", { id: newDoctor.id, name: newDoctor.name });
       res.status(201).json({ success: true, data: newDoctor });
     } catch (error) {
@@ -49,7 +47,7 @@ export class DoctorsController {
     }
   }
 
-  static updateDoctor(req, res) {
+  static async updateDoctor(req, res) {
     try {
       const { id } = req.params;
       const { name, specialty, experience, contact } = req.body;
@@ -59,7 +57,7 @@ export class DoctorsController {
         return res.status(400).json({ success: false, message: "All fields are required" });
       }
 
-      const updatedDoctor = DoctorsService.updateDoctor(Number(id), {
+      const updatedDoctor = await DoctorsService.updateDoctor(Number(id), {
         name,
         specialty,
         experience,
@@ -79,10 +77,10 @@ export class DoctorsController {
     }
   }
 
-  static deleteDoctor(req, res) {
+  static async deleteDoctor(req, res) {
     try {
       const { id } = req.params;
-      const deletedDoctor = DoctorsService.deleteDoctor(Number(id));
+      const deletedDoctor = await DoctorsService.deleteDoctor(Number(id));
 
       if (!deletedDoctor) {
         logger.warn("Doctor not found for deletion", { id });
