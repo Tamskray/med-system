@@ -10,7 +10,8 @@ export class RoomsService {
   static async getAllRooms() {
     const { data: rooms, error } = await supabase
       .from(ROOMS_TABLE)
-      .select("id, room_number, description, is_active")
+      .select("id, room_number, description, is_active, doctors(id, last_name, first_name)")
+      .eq("is_active", true)
       .order("room_number", { ascending: true });
 
     if (error) {

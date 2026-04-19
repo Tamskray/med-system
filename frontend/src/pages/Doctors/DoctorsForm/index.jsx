@@ -38,11 +38,35 @@ const getInitialFormValues = (mode, initialValues) => {
   return defaultDoctorFormValues;
 };
 
+const formatDoctorShortName = (doctor = {}) => {
+  const initial = doctor.first_name?.trim()?.charAt(0);
+  if (!doctor.last_name) return null;
+  return initial ? `${doctor.last_name} ${initial}.` : doctor.last_name;
+};
+
+const getRoomMenuLabel = (room, currentDoctorId) => {
+  const baseLabel = room.description
+    ? `${room.room_number} - ${room.description}`
+    : `${room.room_number}`;
+
+  const sharedDoctors = (room.doctors || [])
+    .filter((doctor) => doctor.id !== currentDoctorId)
+    .map(formatDoctorShortName)
+    .filter(Boolean);
+
+  if (sharedDoctors.length === 0) {
+    return baseLabel;
+  }
+
+  return `${baseLabel} (Shared with: ${sharedDoctors.join(", ")})`;
+};
+
 function DoctorsForm({ open, mode, initialValues, isLoading, onClose, onSubmit }) {
   const [formValues, setFormValues] = useState(() => getInitialFormValues(mode, initialValues));
   const [formErrors, setFormErrors] = useState({});
   const [departments, setDepartments] = useState([]);
   const [rooms, setRooms] = useState([]);
+  const currentDoctorId = mode === DOCTOR_FORM_MODES.EDIT ? formValues.id : null;
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/departments`)
@@ -159,7 +183,7 @@ function DoctorsForm({ open, mode, initialValues, isLoading, onClose, onSubmit }
             </MenuItem>
             {rooms.map((room) => (
               <MenuItem key={room.id} value={room.id}>
-                {room.room_number}
+                {getRoomMenuLabel(room, currentDoctorId)}
               </MenuItem>
             ))}
           </Select>

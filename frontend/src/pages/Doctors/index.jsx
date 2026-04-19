@@ -1,6 +1,9 @@
 import { useState, useMemo, useEffect } from "react";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
+import FormControl from "@mui/material/FormControl";
+import Select from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
 import { useDispatch, useSelector } from "react-redux";
 import Button from "../../components/core/Button";
 import Table from "../../components/core/Table";
@@ -16,6 +19,8 @@ function Doctors() {
   const { doctors, isLoading } = useSelector((state) => state.doctors);
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [filterDepartmentId, setFilterDepartmentId] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [formMode, setFormMode] = useState(DOCTOR_FORM_MODES.CREATE);
   const [selectedDoctor, setSelectedDoctor] = useState(null);
@@ -26,19 +31,44 @@ function Doctors() {
     dispatch(fetchDoctors());
   }, [dispatch]);
 
+  const departments = useMemo(() => {
+    if (!doctors) return [];
+    const seen = new Set();
+    return doctors
+      .filter((d) => d.department_id && d.department_name)
+      .reduce((acc, d) => {
+        if (!seen.has(d.department_id)) {
+          seen.add(d.department_id);
+          acc.push({ id: d.department_id, name: d.department_name });
+        }
+        return acc;
+      }, [])
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [doctors]);
+
   const filteredDoctors = useMemo(() => {
     if (!doctors) return [];
-    if (!searchTerm.trim()) return doctors;
 
     return doctors.filter((doctor) => {
-      const search = searchTerm.toLowerCase();
-      return (
-        doctor.last_name?.toLowerCase().includes(search) ||
-        doctor.first_name?.toLowerCase().includes(search) ||
-        doctor.room_number?.toLowerCase().includes(search)
-      );
+      if (searchTerm.trim()) {
+        const search = searchTerm.toLowerCase();
+        const matchesSearch =
+          doctor.last_name?.toLowerCase().includes(search) ||
+          doctor.first_name?.toLowerCase().includes(search) ||
+          doctor.room_number?.toLowerCase().includes(search);
+        if (!matchesSearch) return false;
+      }
+
+      if (filterDepartmentId !== "" && doctor.department_id !== filterDepartmentId) return false;
+
+      if (filterStatus !== "") {
+        const isActive = filterStatus === "active";
+        if (doctor.is_active !== isActive) return false;
+      }
+
+      return true;
     });
-  }, [searchTerm, doctors]);
+  }, [searchTerm, filterDepartmentId, filterStatus, doctors]);
 
   const openCreateModal = () => {
     setFormMode(DOCTOR_FORM_MODES.CREATE);
@@ -111,6 +141,44 @@ function Doctors() {
         <Button variant="contained" onClick={openCreateModal} disabled={isLoading}>
           Create
         </Button>
+      </Box>
+
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, marginBottom: 2 }}>
+        <FormControl size="small" sx={{ minWidth: 220 }}>
+          <Select
+            displayEmpty
+            value={filterDepartmentId}
+            onChange={(e) => setFilterDepartmentId(e.target.value)}
+            renderValue={(value) =>
+              value === ""
+                ? "Усі відділення"
+                : (departments.find((d) => d.id === value)?.name ?? "Усі відділення")
+            }
+          >
+            <MenuItem value="">Усі відділення</MenuItem>
+            {departments.map((dep) => (
+              <MenuItem key={dep.id} value={dep.id}>
+                {dep.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        <FormControl size="small" sx={{ minWidth: 160 }}>
+          <Select
+            displayEmpty
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            renderValue={(value) =>
+              ({ "": "Усі статуси", active: "Активний", inactive: "Неактивний" })[value] ??
+              "Усі статуси"
+            }
+          >
+            <MenuItem value="">Усі статуси</MenuItem>
+            <MenuItem value="active">Активний</MenuItem>
+            <MenuItem value="inactive">Неактивний</MenuItem>
+          </Select>
+        </FormControl>
       </Box>
 
       <Table data={filteredDoctors} columns={columns} isLoading={isLoading} />
