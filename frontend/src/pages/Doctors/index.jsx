@@ -14,6 +14,8 @@ import { getDoctorsColumns } from "./columns.jsx";
 import { DOCTOR_FORM_MODES } from "./constants";
 import { fetchDoctors, createDoctor, updateDoctor, deleteDoctor } from "../../redux/slices/doctors";
 
+const API_BASE_URL = "http://localhost:5000/api";
+
 function Doctors() {
   const dispatch = useDispatch();
   const { doctors, isLoading } = useSelector((state) => state.doctors);
@@ -86,16 +88,44 @@ function Doctors() {
     setIsFormModalOpen(false);
   };
 
-  const handleDoctorSubmit = (doctorData) => {
+  const handleDoctorSubmit = async (doctorData) => {
     if (isLoading) return;
 
-    if (formMode === DOCTOR_FORM_MODES.EDIT) {
-      dispatch(updateDoctor({ id: doctorData.id, ...doctorData }));
-    } else {
-      dispatch(createDoctor(doctorData));
-    }
+    try {
+      const { workingHours, ...doctorPayload } = doctorData;
+      let doctorId;
 
-    setIsFormModalOpen(false);
+      if (formMode === DOCTOR_FORM_MODES.EDIT) {
+        const result = await dispatch(
+          updateDoctor({ id: doctorPayload.id, ...doctorPayload }),
+        ).unwrap();
+        doctorId = result.id;
+      } else {
+        const result = await dispatch(createDoctor(doctorPayload)).unwrap();
+        doctorId = result.id;
+      }
+
+      // Save working hours if provided
+      if (workingHours && workingHours.length > 0 && doctorId) {
+        try {
+          const whResponse = await fetch(`${API_BASE_URL}/working-hours/${doctorId}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ workingHours }),
+          });
+
+          if (!whResponse.ok) {
+            console.error("Failed to save working hours");
+          }
+        } catch (error) {
+          console.error("Error saving working hours:", error);
+        }
+      }
+
+      setIsFormModalOpen(false);
+    } catch (error) {
+      console.error("Error submitting doctor:", error);
+    }
   };
 
   const openDeleteModal = (doctor) => {

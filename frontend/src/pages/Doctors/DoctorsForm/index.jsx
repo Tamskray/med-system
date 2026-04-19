@@ -9,6 +9,7 @@ import FormHelperText from "@mui/material/FormHelperText";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Switch from "@mui/material/Switch";
 import Modal from "../../../components/core/Modal";
+import WorkingHours from "./WorkingHours";
 import { DOCTOR_FORM_MODES } from "../constants";
 
 const API_BASE_URL = "http://localhost:5000/api";
@@ -66,6 +67,8 @@ function DoctorsForm({ open, mode, initialValues, isLoading, onClose, onSubmit }
   const [formErrors, setFormErrors] = useState({});
   const [departments, setDepartments] = useState([]);
   const [rooms, setRooms] = useState([]);
+  const [workingHours, setWorkingHours] = useState([]);
+  const [isLoadingWorkingHours, setIsLoadingWorkingHours] = useState(false);
   const currentDoctorId = mode === DOCTOR_FORM_MODES.EDIT ? formValues.id : null;
 
   useEffect(() => {
@@ -79,6 +82,20 @@ function DoctorsForm({ open, mode, initialValues, isLoading, onClose, onSubmit }
       .then((data) => setRooms(data.data || []))
       .catch(() => setRooms([]));
   }, []);
+
+  // Fetch working hours when doctor is loaded in edit mode
+  useEffect(() => {
+    if (mode === DOCTOR_FORM_MODES.EDIT && currentDoctorId && open) {
+      setIsLoadingWorkingHours(true);
+      fetch(`${API_BASE_URL}/working-hours/${currentDoctorId}`)
+        .then((res) => res.json())
+        .then((data) => setWorkingHours(data.data || []))
+        .catch(() => setWorkingHours([]))
+        .finally(() => setIsLoadingWorkingHours(false));
+    } else if (mode === DOCTOR_FORM_MODES.CREATE) {
+      setWorkingHours([]);
+    }
+  }, [mode, currentDoctorId, open]);
 
   const handleChange = (field) => (event) => {
     setFormValues((prev) => ({ ...prev, [field]: event.target.value }));
@@ -114,6 +131,7 @@ function DoctorsForm({ open, mode, initialValues, isLoading, onClose, onSubmit }
         formValues.slot_duration_override !== "" ? Number(formValues.slot_duration_override) : null,
       department_id: Number(formValues.department_id),
       room_id: formValues.room_id !== "" ? Number(formValues.room_id) : null,
+      workingHours,
     });
   };
 
@@ -208,6 +226,8 @@ function DoctorsForm({ open, mode, initialValues, isLoading, onClose, onSubmit }
           }
           label="Активний"
         />
+
+        <WorkingHours workingHours={workingHours} onChange={setWorkingHours} />
       </Box>
     </Modal>
   );
