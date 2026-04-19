@@ -1,9 +1,10 @@
 import { supabase } from "../supabase.js";
+import { POSTGREST_ERROR_CODES } from "../constants/dbErrors.js";
 import { DOCTORS_TABLE } from "../models/doctors.js";
 
 export class DoctorsService {
   static isNotFoundError(error) {
-    return error?.code === "PGRST116";
+    return error?.code === POSTGREST_ERROR_CODES.NO_ROWS_RETURNED;
   }
 
   static async getAllDoctors() {
