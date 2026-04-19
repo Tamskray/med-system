@@ -33,9 +33,9 @@ function Doctors() {
     return doctors.filter((doctor) => {
       const search = searchTerm.toLowerCase();
       return (
-        doctor.name.toLowerCase().includes(search) ||
-        doctor.specialty.toLowerCase().includes(search) ||
-        doctor.contact.toLowerCase().includes(search)
+        doctor.last_name?.toLowerCase().includes(search) ||
+        doctor.first_name?.toLowerCase().includes(search) ||
+        doctor.room_number?.toLowerCase().includes(search)
       );
     });
   }, [searchTerm, doctors]);
@@ -62,14 +62,7 @@ function Doctors() {
     if (formMode === DOCTOR_FORM_MODES.EDIT) {
       dispatch(updateDoctor({ id: doctorData.id, ...doctorData }));
     } else {
-      dispatch(
-        createDoctor({
-          name: doctorData.name,
-          specialty: doctorData.specialty,
-          experience: doctorData.experience,
-          contact: doctorData.contact,
-        }),
-      );
+      dispatch(createDoctor(doctorData));
     }
 
     setIsFormModalOpen(false);
@@ -110,7 +103,7 @@ function Doctors() {
         }}
       >
         <SearchInput
-          placeholder="Search by name, specialty, or contact..."
+          placeholder="Пошук за прізвищем, іменем або кабінетом..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           sx={{ flex: 1, minWidth: 280, maxWidth: 520 }}
@@ -138,7 +131,7 @@ function Doctors() {
         open={isDeleteModalOpen}
         onClose={handleCancelDelete}
         onConfirm={handleConfirmDelete}
-        itemName={deleteTarget?.name}
+        itemName={[deleteTarget?.last_name, deleteTarget?.first_name].filter(Boolean).join(" ")}
         itemLabel="doctor"
         isLoading={isLoading}
       />

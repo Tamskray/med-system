@@ -1,16 +1,19 @@
 import { supabase } from "../supabase.js";
 import { POSTGREST_ERROR_CODES } from "../constants/dbErrors.js";
-import { DOCTORS_TABLE } from "../models/doctors.js";
 
 export class DoctorsService {
   static isNotFoundError(error) {
     return error?.code === POSTGREST_ERROR_CODES.NO_ROWS_RETURNED;
   }
 
+  static getDoctorsSelect() {
+    return "id, user_id, last_name, first_name, middle_name, department_id, room_id, slot_duration_override, is_active, departments(name), rooms(id, room_number)";
+  }
+
   static async getAllDoctors() {
     const { data: doctors, error } = await supabase
-      .from(DOCTORS_TABLE)
-      .select("*")
+      .from("doctors")
+      .select(this.getDoctorsSelect())
       .order("id", { ascending: true });
 
     if (error) {
@@ -22,8 +25,8 @@ export class DoctorsService {
 
   static async getDoctorById(id) {
     const { data: doctor, error } = await supabase
-      .from(DOCTORS_TABLE)
-      .select("*")
+      .from("doctors")
+      .select(this.getDoctorsSelect())
       .eq("id", id)
       .single();
 
@@ -37,9 +40,9 @@ export class DoctorsService {
 
   static async createDoctor(data) {
     const { data: newDoctor, error } = await supabase
-      .from(DOCTORS_TABLE)
+      .from("doctors")
       .insert([data])
-      .select()
+      .select(this.getDoctorsSelect())
       .single();
 
     if (error) {
@@ -51,10 +54,10 @@ export class DoctorsService {
 
   static async updateDoctor(id, data) {
     const { data: updatedDoctor, error } = await supabase
-      .from(DOCTORS_TABLE)
+      .from("doctors")
       .update(data)
       .eq("id", id)
-      .select()
+      .select(this.getDoctorsSelect())
       .single();
 
     if (error) {
@@ -67,10 +70,10 @@ export class DoctorsService {
 
   static async deleteDoctor(id) {
     const { data: deletedDoctor, error } = await supabase
-      .from(DOCTORS_TABLE)
+      .from("doctors")
       .delete()
       .eq("id", id)
-      .select()
+      .select(this.getDoctorsSelect())
       .single();
 
     if (error) {

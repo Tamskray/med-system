@@ -31,15 +31,35 @@ export class DoctorsController {
 
   static async createDoctor(req, res) {
     try {
-      const { name, specialty, experience, contact } = req.body;
+      const {
+        user_id,
+        last_name,
+        first_name,
+        middle_name,
+        department_id,
+        room_id,
+        slot_duration_override,
+        is_active,
+      } = req.body;
 
-      if (!name || !specialty || !experience || !contact) {
+      if (!last_name || !first_name) {
         logger.warn("Missing required fields for doctor creation");
-        return res.status(400).json({ success: false, message: "All fields are required" });
+        return res
+          .status(400)
+          .json({ success: false, message: "last_name and first_name are required" });
       }
 
-      const newDoctor = await DoctorsService.createDoctor({ name, specialty, experience, contact });
-      logger.info("Doctor created", { id: newDoctor.id, name: newDoctor.name });
+      const newDoctor = await DoctorsService.createDoctor({
+        user_id,
+        last_name,
+        first_name,
+        middle_name,
+        department_id,
+        room_id,
+        slot_duration_override,
+        is_active,
+      });
+      logger.info("Doctor created", { id: newDoctor.id, last_name: newDoctor.last_name });
       res.status(201).json({ success: true, data: newDoctor });
     } catch (error) {
       logger.error("Error creating doctor", { message: error.message });
@@ -50,26 +70,49 @@ export class DoctorsController {
   static async updateDoctor(req, res) {
     try {
       const { id } = req.params;
-      const { name, specialty, experience, contact } = req.body;
+      const {
+        user_id,
+        last_name,
+        first_name,
+        middle_name,
+        department_id,
+        room_id,
+        slot_duration_override,
+        is_active,
+      } = req.body;
 
-      if (!name || !specialty || !experience || !contact) {
-        logger.warn("Missing required fields for doctor update", { id });
-        return res.status(400).json({ success: false, message: "All fields are required" });
+      const payload = {
+        user_id,
+        last_name,
+        first_name,
+        middle_name,
+        department_id,
+        room_id,
+        slot_duration_override,
+        is_active,
+      };
+
+      const dataToUpdate = Object.fromEntries(
+        Object.entries(payload).filter(([, value]) => value !== undefined),
+      );
+
+      if (Object.keys(dataToUpdate).length === 0) {
+        logger.warn("No valid fields provided for doctor update", { id });
+        return res.status(400).json({
+          success: false,
+          message:
+            "Provide at least one field to update: user_id, last_name, first_name, middle_name, department_id, room_id, slot_duration_override, is_active",
+        });
       }
 
-      const updatedDoctor = await DoctorsService.updateDoctor(Number(id), {
-        name,
-        specialty,
-        experience,
-        contact,
-      });
+      const updatedDoctor = await DoctorsService.updateDoctor(Number(id), dataToUpdate);
 
       if (!updatedDoctor) {
         logger.warn("Doctor not found for update", { id });
         return res.status(404).json({ success: false, message: "Doctor not found" });
       }
 
-      logger.info("Doctor updated", { id, name: updatedDoctor.name });
+      logger.info("Doctor updated", { id, last_name: updatedDoctor.last_name });
       res.json({ success: true, data: updatedDoctor });
     } catch (error) {
       logger.error("Error updating doctor", { id: req.params.id, message: error.message });
@@ -87,7 +130,7 @@ export class DoctorsController {
         return res.status(404).json({ success: false, message: "Doctor not found" });
       }
 
-      logger.info("Doctor deleted", { id, name: deletedDoctor.name });
+      logger.info("Doctor deleted", { id, last_name: deletedDoctor.last_name });
       res.json({ success: true, data: deletedDoctor });
     } catch (error) {
       logger.error("Error deleting doctor", { id: req.params.id, message: error.message });

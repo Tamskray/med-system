@@ -1,12 +1,43 @@
+import Chip from "@mui/material/Chip";
 import IconButton from "@mui/material/IconButton";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 
 export const getDoctorsColumns = ({ onEdit, onDelete }) => [
-  { key: "name", label: "Name", width: 180, minWidth: 150 },
-  { key: "specialty", label: "Specialty", width: 160, minWidth: 140 },
-  { key: "experience", label: "Experience", width: 130, minWidth: 110 },
-  { key: "contact", label: "Contact", width: 200, minWidth: 180 },
+  {
+    key: "full_name",
+    label: "ПІБ",
+    width: 240,
+    minWidth: 180,
+    render: (row) =>
+      [row.last_name, row.first_name, row.middle_name].filter(Boolean).join(" ") || "—",
+  },
+  {
+    key: "department_name",
+    label: "Відділення",
+    width: 200,
+    minWidth: 150,
+    render: (row) => row.department_name ?? "—",
+  },
+  {
+    key: "room_number",
+    label: "Кабінет",
+    width: 110,
+    minWidth: 90,
+    render: (row) => row.room_number || "—",
+  },
+  {
+    key: "is_active",
+    label: "Статус",
+    width: 130,
+    minWidth: 100,
+    render: (row) =>
+      row.is_active ? (
+        <Chip label="Активний" size="small" color="success" variant="outlined" />
+      ) : (
+        <Chip label="Неактивний" size="small" color="default" variant="outlined" />
+      ),
+  },
   {
     key: "actions",
     label: "Actions",
