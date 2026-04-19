@@ -1,4 +1,4 @@
-import { AppointmentsService } from "../services/appointments.js";
+import { AppointmentsService, AppointmentValidationError } from "../services/appointments.js";
 import logger from "../utils/logger.js";
 
 export class AppointmentsController {
@@ -56,6 +56,9 @@ export class AppointmentsController {
       res.status(201).json({ success: true, data: newAppointment });
     } catch (error) {
       logger.error("Error creating appointment", { message: error.message });
+      if (error instanceof AppointmentValidationError) {
+        return res.status(400).json({ success: false, message: error.message });
+      }
       res.status(500).json({ success: false, message: error.message });
     }
   }
@@ -112,6 +115,9 @@ export class AppointmentsController {
       res.json({ success: true, data: updatedAppointment });
     } catch (error) {
       logger.error("Error updating appointment", { id: req.params.id, message: error.message });
+      if (error instanceof AppointmentValidationError) {
+        return res.status(400).json({ success: false, message: error.message });
+      }
       res.status(500).json({ success: false, message: error.message });
     }
   }

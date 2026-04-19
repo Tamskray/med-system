@@ -1,9 +1,10 @@
 import Chip from "@mui/material/Chip";
 import IconButton from "@mui/material/IconButton";
+import Switch from "@mui/material/Switch";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 
-export const getDoctorsColumns = ({ onEdit, onDelete }) => [
+export const getDoctorsColumns = ({ onEdit, onDelete, onToggleActive, togglingDoctorIds = {} }) => [
   {
     key: "full_name",
     label: "ПІБ",
@@ -29,14 +30,24 @@ export const getDoctorsColumns = ({ onEdit, onDelete }) => [
   {
     key: "is_active",
     label: "Статус",
-    width: 130,
-    minWidth: 100,
-    render: (row) =>
-      row.is_active ? (
-        <Chip label="Активний" size="small" color="success" variant="outlined" />
-      ) : (
-        <Chip label="Неактивний" size="small" color="default" variant="outlined" />
-      ),
+    width: 180,
+    minWidth: 150,
+    render: (row) => (
+      <>
+        <Switch
+          size="small"
+          checked={Boolean(row.is_active)}
+          disabled={Boolean(togglingDoctorIds[row.id])}
+          onChange={(event) => onToggleActive(row, event.target.checked)}
+          inputProps={{ "aria-label": "Doctor active status" }}
+        />
+        {row.is_active ? (
+          <Chip label="Активний" size="small" color="success" variant="outlined" />
+        ) : (
+          <Chip label="Неактивний" size="small" color="default" variant="outlined" />
+        )}
+      </>
+    ),
   },
   {
     key: "actions",

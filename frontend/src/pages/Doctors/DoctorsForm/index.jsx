@@ -68,7 +68,6 @@ function DoctorsForm({ open, mode, initialValues, isLoading, onClose, onSubmit }
   const [departments, setDepartments] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [workingHours, setWorkingHours] = useState([]);
-  const [isLoadingWorkingHours, setIsLoadingWorkingHours] = useState(false);
   const currentDoctorId = mode === DOCTOR_FORM_MODES.EDIT ? formValues.id : null;
 
   useEffect(() => {
@@ -86,14 +85,12 @@ function DoctorsForm({ open, mode, initialValues, isLoading, onClose, onSubmit }
   // Fetch working hours when doctor is loaded in edit mode
   useEffect(() => {
     if (mode === DOCTOR_FORM_MODES.EDIT && currentDoctorId && open) {
-      setIsLoadingWorkingHours(true);
       fetch(`${API_BASE_URL}/working-hours/${currentDoctorId}`)
         .then((res) => res.json())
         .then((data) => setWorkingHours(data.data || []))
-        .catch(() => setWorkingHours([]))
-        .finally(() => setIsLoadingWorkingHours(false));
+        .catch(() => setWorkingHours([]));
     } else if (mode === DOCTOR_FORM_MODES.CREATE) {
-      setWorkingHours([]);
+      queueMicrotask(() => setWorkingHours([]));
     }
   }, [mode, currentDoctorId, open]);
 
@@ -206,15 +203,23 @@ function DoctorsForm({ open, mode, initialValues, isLoading, onClose, onSubmit }
             ))}
           </Select>
         </FormControl>
-        <TextField
-          label="Тривалість прийому (хв)"
-          type="number"
-          value={formValues.slot_duration_override}
-          onChange={handleChange("slot_duration_override")}
-          fullWidth
-          size="small"
-          inputProps={{ min: 1 }}
-        />
+
+        <FormControl fullWidth size="small">
+          <InputLabel id="slot-duration-label">Тривалість прийому (хв)</InputLabel>
+          <Select
+            labelId="slot-duration-label"
+            value={
+              formValues.slot_duration_override === "" ? 30 : formValues.slot_duration_override
+            }
+            onChange={handleChange("slot_duration_override")}
+            label="Тривалість прийому (хв)"
+          >
+            <MenuItem value={15}>15</MenuItem>
+            <MenuItem value={30}>30</MenuItem>
+            <MenuItem value={45}>45</MenuItem>
+            <MenuItem value={60}>60</MenuItem>
+          </Select>
+        </FormControl>
 
         <FormControlLabel
           control={
@@ -227,7 +232,11 @@ function DoctorsForm({ open, mode, initialValues, isLoading, onClose, onSubmit }
           label="Активний"
         />
 
-        <WorkingHours workingHours={workingHours} onChange={setWorkingHours} />
+        <WorkingHours
+          workingHours={workingHours}
+          onChange={setWorkingHours}
+          slotDurationMinutes={Number(formValues.slot_duration_override) || 30}
+        />
       </Box>
     </Modal>
   );

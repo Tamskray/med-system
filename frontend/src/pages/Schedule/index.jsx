@@ -5,11 +5,13 @@ import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
 import MenuItem from "@mui/material/MenuItem";
 import Autocomplete from "@mui/material/Autocomplete";
+import Tooltip, { tooltipClasses } from "@mui/material/Tooltip";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import IconButton from "@mui/material/IconButton";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import { styled } from "@mui/material/styles";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchDoctors } from "../../redux/slices/doctors";
 import { fetchPatients, createPatient } from "../../redux/slices/patients";
@@ -38,15 +40,23 @@ const shiftIsoDate = (isoDate, daysDelta) => {
   return toIsoDate(date);
 };
 
+const getDbDayOfWeekFromIsoDate = (isoDate) => {
+  const [year, month, day] = String(isoDate).split("-").map(Number);
+  const localDate = new Date(year, month - 1, day);
+  return (localDate.getDay() + 6) % 7;
+};
+
 const timeToMinutes = (time) => {
   const [hours, minutes] = String(time).split(":").map(Number);
   return hours * 60 + minutes;
 };
 
 const BASE_SLOT_MINUTES = 15;
-const TOTAL_MINUTES = timeToMinutes(DAY_END) - timeToMinutes(DAY_START);
+const DAY_START_MINUTES = timeToMinutes(DAY_START);
+const DAY_END_MINUTES = timeToMinutes(DAY_END);
+const TOTAL_MINUTES = DAY_END_MINUTES - DAY_START_MINUTES;
 const TOTAL_GRID_COLUMNS = TOTAL_MINUTES / BASE_SLOT_MINUTES;
-const LEFT_COLUMN_WIDTH = 260;
+const LEFT_COLUMN_WIDTH = 150;
 const TIMELINE_COLUMN_WIDTH = 38;
 const TIMELINE_GAP = 4;
 const TIMELINE_PADDING_X = 4;
@@ -106,6 +116,28 @@ const getAppointmentPatientFullName = (appointment) => {
   return fullName || "Без пацієнта";
 };
 
+const SlotTooltip = styled(({ className, ...props }) => (
+  <Tooltip {...props} classes={{ popper: className }} arrow placement="top" disableInteractive />
+))(({ theme }) => ({
+  [`& .${tooltipClasses.tooltip}`]: {
+    backgroundColor: theme.palette.common.white,
+    color: theme.palette.text.primary,
+    border: `1px solid ${theme.palette.divider}`,
+    boxShadow: theme.shadows[2],
+    fontSize: 12,
+    lineHeight: 1.35,
+    padding: theme.spacing(1, 1.25),
+    maxWidth: 260,
+  },
+  [`& .${tooltipClasses.arrow}`]: {
+    color: theme.palette.common.white,
+    "&::before": {
+      border: `1px solid ${theme.palette.divider}`,
+      boxSizing: "border-box",
+    },
+  },
+}));
+
 function Schedule() {
   const dispatch = useDispatch();
   const { doctors, isLoading } = useSelector((state) => state.doctors);
@@ -113,6 +145,7 @@ function Schedule() {
   const [selectedDate, setSelectedDate] = useState(getTodayIsoDate());
   const [appointments, setAppointments] = useState([]);
   const [isAppointmentsLoading, setIsAppointmentsLoading] = useState(false);
+  const [isWorkingHoursLoading, setIsWorkingHoursLoading] = useState(false);
   const [isBookingSubmitting, setIsBookingSubmitting] = useState(false);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [isCreatePatientModalOpen, setIsCreatePatientModalOpen] = useState(false);
@@ -123,6 +156,7 @@ function Schedule() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [workingHoursByDoctorId, setWorkingHoursByDoctorId] = useState({});
   const [bookingFormValues, setBookingFormValues] = useState({
     patient_id: null,
     status: "Scheduled",
@@ -171,6 +205,67 @@ function Schedule() {
 
     loadAppointments();
   }, [selectedDate]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    const loadWorkingHours = async () => {
+      const allDoctors = doctors || [];
+
+      if (!allDoctors.length) {
+        if (isActive) setWorkingHoursByDoctorId({});
+        return;
+      }
+
+      setIsWorkingHoursLoading(true);
+      try {
+        const dayOfWeek = getDbDayOfWeekFromIsoDate(selectedDate);
+        const entries = await Promise.all(
+          allDoctors.map(async (doctor) => {
+            try {
+              const response = await fetch(`${API_BASE_URL}/working-hours/${doctor.id}`);
+              if (!response.ok) {
+                return [doctor.id, null];
+              }
+
+              const result = await response.json();
+              const dayHours = (result.data || []).find(
+                (workingHour) => Number(workingHour.day_of_week) === dayOfWeek,
+              );
+
+              if (!dayHours) {
+                return [doctor.id, null];
+              }
+
+              return [
+                doctor.id,
+                {
+                  start: String(dayHours.start_time || "").slice(0, 5),
+                  end: String(dayHours.end_time || "").slice(0, 5),
+                },
+              ];
+            } catch {
+              return [doctor.id, null];
+            }
+          }),
+        );
+
+        if (isActive) {
+          setWorkingHoursByDoctorId(Object.fromEntries(entries));
+        }
+      } finally {
+        if (isActive) {
+          setIsWorkingHoursLoading(false);
+        }
+      }
+    };
+
+    loadWorkingHours();
+
+    return () => {
+      isActive = false;
+    };
+  }, [doctors, selectedDate]);
 
   const doctorsByDepartment = useMemo(() => {
     if (!doctors?.length) return {};
@@ -347,9 +442,19 @@ function Schedule() {
         );
 
         if (!response.ok) {
-          throw new Error(
-            isEditMode ? "Failed to update appointment" : "Failed to create appointment",
-          );
+          const fallbackMessage = isEditMode
+            ? "Failed to update appointment"
+            : "Failed to create appointment";
+          let serverMessage = fallbackMessage;
+
+          try {
+            const errorResult = await response.json();
+            serverMessage = errorResult?.message || fallbackMessage;
+          } catch {
+            serverMessage = fallbackMessage;
+          }
+
+          throw new Error(serverMessage);
         }
 
         const result = await response.json();
@@ -401,12 +506,32 @@ function Schedule() {
 
     const status = appointment.status || "Scheduled";
     if (status === "Completed") {
-      return { bg: "info.light", hoverBg: "info.main", text: "info.dark" };
+      return { bg: "info.light", hoverBg: "info.main", text: "text.primary" };
     }
     if (status === "Cancelled") {
-      return { bg: "error.light", hoverBg: "error.main", text: "error.dark" };
+      return { bg: "error.light", hoverBg: "error.main", text: "text.primary" };
     }
-    return { bg: "success.light", hoverBg: "success.main", text: "success.dark" };
+    return { bg: "success.light", hoverBg: "success.main", text: "text.primary" };
+  };
+
+  const isScheduleLoading = isAppointmentsLoading || isWorkingHoursLoading;
+
+  const getSlotTooltipContent = (block, occupied, appointment) => {
+    if (!occupied) {
+      return [
+        `Час: ${block.start} - ${block.end}`,
+        "Статус: Вільний слот",
+        "Натисніть, щоб створити запис",
+      ].join("\n");
+    }
+
+    return [
+      `Час: ${block.start} - ${block.end}`,
+      `Статус: ${appointment.status || "Scheduled"}`,
+      `Пацієнт: ${getAppointmentPatientFullName(appointment)}`,
+      `Тип: ${appointment.appointment_type || "Consultation"}`,
+      "Натисніть, щоб редагувати",
+    ].join("\n");
   };
 
   return (
@@ -510,22 +635,25 @@ function Schedule() {
           minWidth: 0,
           maxHeight: "calc(100vh - 220px)",
           borderRadius: 2,
-          overflowX: isAppointmentsLoading ? "hidden" : "auto",
-          overflowY: isAppointmentsLoading ? "hidden" : "auto",
+          overflowX: isScheduleLoading ? "hidden" : "auto",
+          overflowY: isScheduleLoading ? "hidden" : "auto",
         }}
       >
         <Box
           sx={{
-            width: isAppointmentsLoading ? "100%" : "max-content",
-            minWidth: isAppointmentsLoading ? 0 : SCHEDULE_TABLE_MIN_WIDTH,
+            width: isScheduleLoading ? "100%" : "max-content",
+            minWidth: isScheduleLoading ? 0 : SCHEDULE_TABLE_MIN_WIDTH,
           }}
         >
-          {!isAppointmentsLoading && (
+          {!isScheduleLoading && (
             <Box
               sx={{
                 display: "grid",
                 width: SCHEDULE_TABLE_MIN_WIDTH,
                 gridTemplateColumns: `${LEFT_COLUMN_WIDTH}px ${TIMELINE_ROW_WIDTH}px`,
+                position: "sticky",
+                top: 0,
+                zIndex: 3,
                 borderBottom: "1px solid",
                 borderColor: "divider",
                 bgcolor: "grey.50",
@@ -570,7 +698,7 @@ function Schedule() {
             </Box>
           )}
 
-          {isAppointmentsLoading ? (
+          {isScheduleLoading ? (
             <Box
               sx={{
                 width: "100%",
@@ -606,7 +734,23 @@ function Schedule() {
                     {departmentDoctors.map((doctor) => {
                       const slotDuration =
                         doctor.active_slot_duration ?? doctor.slot_duration_override ?? 30;
-                      const timeBlocks = generateTimeBlocks(DAY_START, DAY_END, slotDuration);
+                      const doctorWorkingHours = workingHoursByDoctorId[doctor.id];
+                      const isDoctorActive = Boolean(doctor.is_active);
+                      const isDoctorWorking =
+                        isDoctorActive &&
+                        Boolean(doctorWorkingHours?.start) &&
+                        Boolean(doctorWorkingHours?.end);
+                      const timeBlocks = isDoctorWorking
+                        ? generateTimeBlocks(
+                            doctorWorkingHours.start,
+                            doctorWorkingHours.end,
+                            slotDuration,
+                          ).filter((block) => {
+                            const blockStart = timeToMinutes(block.start);
+                            const blockEnd = timeToMinutes(block.end);
+                            return blockStart >= DAY_START_MINUTES && blockEnd <= DAY_END_MINUTES;
+                          })
+                        : [];
 
                       return (
                         <Box
@@ -643,14 +787,29 @@ function Schedule() {
 
                           <Box
                             sx={{
-                              display: "grid",
-                              gridTemplateColumns: `repeat(${TOTAL_GRID_COLUMNS}, ${TIMELINE_COLUMN_WIDTH}px)`,
-                              columnGap: `${TIMELINE_GAP}px`,
+                              ...(isDoctorWorking
+                                ? {
+                                    display: "grid",
+                                    gridTemplateColumns: `repeat(${TOTAL_GRID_COLUMNS}, ${TIMELINE_COLUMN_WIDTH}px)`,
+                                    columnGap: `${TIMELINE_GAP}px`,
+                                  }
+                                : {
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                  }),
                               px: `${TIMELINE_PADDING_X}px`,
                               py: 4 / 8,
                               bgcolor: "grey.100",
+                              minHeight: 82,
                             }}
                           >
+                            {!isDoctorWorking && (
+                              <Typography variant="caption" color="text.secondary">
+                                Лікар не працює у цей день
+                              </Typography>
+                            )}
+
                             {timeBlocks.map((block, slotIndex) => {
                               const appointment = getAppointmentForSlot(doctor.id, block);
                               const occupied = Boolean(appointment);
@@ -661,86 +820,91 @@ function Schedule() {
 
                               // Calculate exact visual width based on time
                               const span = slotDuration / BASE_SLOT_MINUTES; // 30min = span 2, 45min = span 3, 60min = span 4
+                              const startColumn =
+                                Math.floor(
+                                  (timeToMinutes(block.start) - DAY_START_MINUTES) /
+                                    BASE_SLOT_MINUTES,
+                                ) + 1;
 
                               return (
-                                <Box
+                                <SlotTooltip
                                   key={`${doctor.id}-${block.start}`}
-                                  onClick={() => {
-                                    if (occupied) {
-                                      openEditAppointmentModal(doctor, block, appointment);
-                                    } else {
-                                      openBookingModal(doctor, block);
-                                    }
-                                  }}
-                                  sx={{
-                                    gridColumn: `span ${span}`, // Forces proportional width!
-                                    minHeight: 74,
-                                    borderRadius: 1,
-                                    border: "1px solid",
-                                    borderColor: "divider",
-                                    cursor: "pointer",
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    gap: 0.25,
-                                    px: 0.4,
-                                    textAlign: "center",
-                                    fontFamily: "Roboto, Arial, sans-serif",
-                                    color: palette.text,
-                                    backgroundColor: palette.bg,
-                                    overflow: "hidden", // Prevents text from pushing the cell wider
-                                    transition: "background-color 120ms ease",
-                                    "&:hover": occupied
-                                      ? {
-                                          backgroundColor: palette.hoverBg,
-                                          color: "common.white",
-                                        }
-                                      : { backgroundColor: "action.hover" },
-                                  }}
-                                  title={
-                                    occupied
-                                      ? `${block.start} - ${block.end} (${getAppointmentPatientFullName(appointment)})`
-                                      : `${block.start} - ${block.end}`
-                                  }
+                                  title={getSlotTooltipContent(block, occupied, appointment)}
+                                  enterDelay={180}
                                 >
-                                  {!occupied && (
-                                    <Typography
-                                      sx={{ fontSize: 14, lineHeight: 1, fontWeight: 700 }}
-                                    >
-                                      +
-                                    </Typography>
-                                  )}
-                                  <Typography
+                                  <Box
+                                    onClick={() => {
+                                      if (occupied) {
+                                        openEditAppointmentModal(doctor, block, appointment);
+                                      } else {
+                                        openBookingModal(doctor, block);
+                                      }
+                                    }}
                                     sx={{
-                                      fontSize: 10,
-                                      lineHeight: 1.1,
-                                      fontWeight: 700,
-                                      whiteSpace: "nowrap",
+                                      gridColumn: `${startColumn} / span ${span}`,
+                                      minHeight: 74,
+                                      borderRadius: 1,
+                                      border: "1px solid",
+                                      borderColor: "divider",
+                                      cursor: "pointer",
+                                      display: "flex",
+                                      flexDirection: "column",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      gap: 0.25,
+                                      px: 0.4,
+                                      textAlign: "center",
+                                      fontFamily: "Roboto, Arial, sans-serif",
+                                      color: palette.text,
+                                      backgroundColor: palette.bg,
+                                      overflow: "hidden", // Prevents text from pushing the cell wider
+                                      transition: "background-color 120ms ease",
+                                      "&:hover": occupied
+                                        ? {
+                                            backgroundColor: palette.hoverBg,
+                                            color: "text.primary",
+                                          }
+                                        : { backgroundColor: "action.hover" },
                                     }}
                                   >
-                                    {block.start}
-                                  </Typography>
-                                  <Typography
-                                    sx={{ fontSize: 10, lineHeight: 1.1, whiteSpace: "nowrap" }}
-                                  >
-                                    {slotStatus}
-                                  </Typography>
-                                  {occupied && (
+                                    {!occupied && (
+                                      <Typography
+                                        sx={{ fontSize: 14, lineHeight: 1, fontWeight: 700 }}
+                                      >
+                                        +
+                                      </Typography>
+                                    )}
                                     <Typography
                                       sx={{
-                                        fontSize: 9,
+                                        fontSize: 10,
                                         lineHeight: 1.1,
-                                        maxWidth: "100%",
+                                        fontWeight: 700,
                                         whiteSpace: "nowrap",
-                                        textOverflow: "ellipsis",
-                                        overflow: "hidden",
                                       }}
                                     >
-                                      {getAppointmentPatientFullName(appointment)}
+                                      {block.start}
                                     </Typography>
-                                  )}
-                                </Box>
+                                    <Typography
+                                      sx={{ fontSize: 10, lineHeight: 1.1, whiteSpace: "nowrap" }}
+                                    >
+                                      {slotStatus}
+                                    </Typography>
+                                    {occupied && (
+                                      <Typography
+                                        sx={{
+                                          fontSize: 9,
+                                          lineHeight: 1.1,
+                                          maxWidth: "100%",
+                                          whiteSpace: "nowrap",
+                                          textOverflow: "ellipsis",
+                                          overflow: "hidden",
+                                        }}
+                                      >
+                                        {getAppointmentPatientFullName(appointment)}
+                                      </Typography>
+                                    )}
+                                  </Box>
+                                </SlotTooltip>
                               );
                             })}
                           </Box>

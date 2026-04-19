@@ -5,6 +5,7 @@ import FormControl from "@mui/material/FormControl";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import { useDispatch, useSelector } from "react-redux";
+import { showErrorToast } from "../../utils/toast";
 import Button from "../../components/core/Button";
 import Table from "../../components/core/Table";
 import SearchInput from "../../components/core/SearchInput";
@@ -28,6 +29,7 @@ function Doctors() {
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [togglingDoctorIds, setTogglingDoctorIds] = useState({});
 
   useEffect(() => {
     dispatch(fetchDoctors());
@@ -145,7 +147,29 @@ function Doctors() {
     setIsDeleteModalOpen(false);
   };
 
-  const columns = getDoctorsColumns({ onEdit: openEditModal, onDelete: openDeleteModal });
+  const handleToggleActive = async (doctor, isActive) => {
+    if (!doctor?.id || isLoading) return;
+
+    setTogglingDoctorIds((prev) => ({ ...prev, [doctor.id]: true }));
+    try {
+      await dispatch(updateDoctor({ id: doctor.id, is_active: isActive })).unwrap();
+    } catch (error) {
+      showErrorToast(error || "Не вдалося оновити статус лікаря");
+    } finally {
+      setTogglingDoctorIds((prev) => {
+        const next = { ...prev };
+        delete next[doctor.id];
+        return next;
+      });
+    }
+  };
+
+  const columns = getDoctorsColumns({
+    onEdit: openEditModal,
+    onDelete: openDeleteModal,
+    onToggleActive: handleToggleActive,
+    togglingDoctorIds,
+  });
 
   return (
     <Box>
