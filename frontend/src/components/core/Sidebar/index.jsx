@@ -6,6 +6,7 @@ import ScheduleIcon from "@mui/icons-material/Schedule";
 import PeopleIcon from "@mui/icons-material/People";
 import LocalHospitalIcon from "@mui/icons-material/LocalHospital";
 import { Link as RouterLink } from "react-router";
+import { useLocation } from "react-router";
 
 const navItems = [
   { path: "/schedule", label: "Schedule", icon: ScheduleIcon },
@@ -14,6 +15,8 @@ const navItems = [
 ];
 
 export default function Sidebar({ open, toggleSidebar }) {
+  const location = useLocation();
+
   return (
     <Box
       sx={{
@@ -32,7 +35,15 @@ export default function Sidebar({ open, toggleSidebar }) {
           top: 10,
           left: open ? 10 : "50%",
           transform: open ? "none" : "translateX(-50%)",
+          backgroundColor: "background.paper",
+          border: "1px solid",
+          borderColor: "divider",
+          width: 34,
+          height: 34,
           "&:focus": { outline: "none" },
+          "&:hover": {
+            backgroundColor: "action.hover",
+          },
         }}
       >
         {open ? <CloseIcon /> : <MenuIcon />}
@@ -50,6 +61,8 @@ export default function Sidebar({ open, toggleSidebar }) {
       >
         {navItems.map((item) => {
           const Icon = item.icon;
+          const isActive = location.pathname === item.path;
+
           return (
             <Box
               key={item.path}
@@ -62,12 +75,18 @@ export default function Sidebar({ open, toggleSidebar }) {
                 padding: open ? "8px 12px" : "8px",
                 borderRadius: 1,
                 textDecoration: "none",
-                color: "inherit",
-                transition: "background-color 0.2s",
+                color: isActive ? "primary.main" : "text.secondary",
+                backgroundColor: isActive ? "action.selected" : "transparent",
+                border: "1px solid",
+                borderColor: isActive ? "primary.light" : "transparent",
+                transition: "all 0.2s",
                 "&:hover": {
-                  backgroundColor: "rgba(0, 0, 0, 0.05)",
+                  backgroundColor: isActive ? "action.selected" : "action.hover",
+                  color: "primary.main",
                 },
                 justifyContent: open ? "flex-start" : "center",
+                fontWeight: isActive ? 600 : 500,
+                fontFamily: "Roboto, sans-serif",
               }}
             >
               <Icon />

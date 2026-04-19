@@ -1,4 +1,5 @@
 import MuiButton from "@mui/material/Button";
+import { alpha } from "@mui/material/styles";
 
 const BUTTON_MODES = {
   DEFAULT: "default",
@@ -16,34 +17,34 @@ const modeProps = {
   [BUTTON_MODES.SECONDARY]: {
     variant: "outlined",
     color: "primary",
-    sx: {
-      backgroundColor: "#fff",
+    sx: (theme) => ({
+      backgroundColor: "background.paper",
       borderColor: "primary.main",
       color: "primary.main",
       "&:hover": {
-        backgroundColor: "rgba(25, 118, 210, 0.04)",
+        backgroundColor: alpha(theme.palette.primary.main, 0.06),
         borderColor: "primary.main",
       },
-    },
+    }),
   },
   [BUTTON_MODES.ERROR]: {
     variant: "outlined",
     color: "error",
-    sx: {
-      backgroundColor: "#fff",
+    sx: (theme) => ({
+      backgroundColor: "background.paper",
       borderColor: "error.main",
       color: "error.main",
       "&:hover": {
-        backgroundColor: "rgba(211, 47, 47, 0.04)",
+        backgroundColor: alpha(theme.palette.error.main, 0.06),
         borderColor: "error.main",
       },
-    },
+    }),
   },
   [BUTTON_MODES.ERROR_FILLED]: {
     variant: "contained",
     color: "error",
     sx: {
-      color: "#fff",
+      color: "common.white",
       "&:hover": {
         backgroundColor: "error.dark",
       },

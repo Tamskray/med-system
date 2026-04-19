@@ -37,8 +37,9 @@ function App() {
           <Box
             sx={{
               width: open ? 220 : 80,
-              backgroundColor: "#fafafa",
-              borderRight: "1px solid rgba(0, 0, 0, 0.12)",
+              backgroundColor: "background.default",
+              borderRight: "1px solid",
+              borderColor: "divider",
               paddingY: 2,
               transition: "width 0.3s ease",
               overflowY: "auto",

@@ -8,6 +8,7 @@ import TableHead from "@mui/material/TableHead";
 import TablePagination from "@mui/material/TablePagination";
 import TableRow from "@mui/material/TableRow";
 import TableSortLabel from "@mui/material/TableSortLabel";
+import { alpha } from "@mui/material/styles";
 import Loading from "../Loading";
 import { ASC, DESC } from "./constants";
 
@@ -47,19 +48,20 @@ const Table = ({
 
   return (
     <Box
-      sx={{
-        border: "1px solid rgba(0, 0, 0, 0.12)",
+      sx={(theme) => ({
+        border: `1px solid ${theme.palette.divider}`,
         borderRadius: "12px",
         overflow: "hidden",
+        backgroundColor: "background.paper",
         ...sx,
-      }}
+      })}
     >
       <TableContainer
-        sx={{
+        sx={(theme) => ({
           overflow: "auto",
           maxHeight: 560,
           scrollbarWidth: "thin",
-          scrollbarColor: "rgba(0, 0, 0, 0.18) transparent",
+          scrollbarColor: `${alpha(theme.palette.text.primary, 0.18)} transparent`,
           "&::-webkit-scrollbar": {
             height: 10,
             width: 10,
@@ -68,23 +70,23 @@ const Table = ({
             backgroundColor: "transparent",
           },
           "&::-webkit-scrollbar-thumb": {
-            backgroundColor: "rgba(0, 0, 0, 0.14)",
+            backgroundColor: alpha(theme.palette.text.primary, 0.14),
             borderRadius: 8,
           },
           "@media (max-width: 600px)": {
             maxHeight: "calc(100vh - 300px)",
           },
-        }}
+        })}
       >
         <MuiTable sx={{ minWidth: 650, tableLayout: "fixed" }} aria-label="data table">
           <TableHead
-            sx={{
+            sx={(theme) => ({
               position: "sticky",
               top: 0,
-              zIndex: 1,
-              backgroundColor: "#f7f7f7",
-              borderBottom: "1px solid rgba(0, 0, 0, 0.12)",
-            }}
+              zIndex: 3,
+              backgroundColor: theme.palette.table.header,
+              borderBottom: `1px solid ${theme.palette.divider}`,
+            })}
           >
             <TableRow>
               {columns.map((column, index) => {
@@ -94,11 +96,15 @@ const Table = ({
                   <TableCell
                     key={column.key}
                     sx={{
+                      position: "sticky",
+                      top: 0,
+                      zIndex: 4,
+                      backgroundColor: "table.header",
                       width: column.width,
                       minWidth: column.minWidth || column.width,
                       maxWidth: column.maxWidth,
-                      borderRight:
-                        index < columns.length - 1 ? "1px solid rgba(0, 0, 0, 0.12)" : undefined,
+                      borderRight: index < columns.length - 1 ? "1px solid" : undefined,
+                      borderColor: "divider",
                     }}
                   >
                     <TableSortLabel
@@ -125,7 +131,16 @@ const Table = ({
               </TableRow>
             ) : paginatedData.length > 0 ? (
               paginatedData.map((row, index) => (
-                <TableRow key={index}>
+                <TableRow
+                  key={index}
+                  sx={(theme) => ({
+                    backgroundColor:
+                      index % 2 === 0 ? "background.paper" : theme.palette.table.zebra,
+                    "&:hover": {
+                      backgroundColor: theme.palette.table.hover,
+                    },
+                  })}
+                >
                   {columns.map((column) => (
                     <TableCell
                       key={column.key}
@@ -162,11 +177,12 @@ const Table = ({
             setPage(0);
           }}
           rowsPerPageOptions={[10, 25, 50]}
-          sx={{
+          sx={(theme) => ({
+            borderTop: `1px solid ${theme.palette.divider}`,
             "& .MuiIconButton-root": {
               "&:focus": { outline: "none" },
             },
-          }}
+          })}
         />
       )}
     </Box>

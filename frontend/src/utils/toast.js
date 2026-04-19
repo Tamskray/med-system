@@ -1,13 +1,14 @@
 import toast from "react-hot-toast";
+import { theme } from "../theme";
 
 export const toastConfig = {
   duration: 4000,
   position: "top-right",
   style: {
-    background: "#fff",
-    color: "#333",
+    background: theme.palette.background.paper,
+    color: theme.palette.text.primary,
     fontFamily: "'Roboto', 'Inter', sans-serif",
-    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+    boxShadow: `0 4px 12px ${theme.palette.action.disabledBackground}`,
   },
 };
 
