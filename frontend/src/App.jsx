@@ -37,6 +37,7 @@ function App() {
           <Box
             sx={{
               width: open ? 220 : 80,
+              flexShrink: 0,
               backgroundColor: "background.default",
               borderRight: "1px solid",
               borderColor: "divider",
@@ -49,10 +50,10 @@ function App() {
           </Box>
         )}
 
-        <Box sx={{ display: "flex", flexDirection: "column", flex: 1 }}>
+        <Box sx={{ display: "flex", flexDirection: "column", flex: 1, minWidth: 0 }}>
           {user && <TopNavbar pageName={pageName} user={user} onLogout={handleLogout} />}
 
-          <Box sx={{ flex: 1, overflow: "auto", paddingX: 3, paddingY: 3 }}>
+          <Box sx={{ flex: 1, minWidth: 0, overflow: "auto", paddingX: 3, paddingY: 3 }}>
             <AppRouter user={user} />
           </Box>
         </Box>
