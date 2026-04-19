@@ -78,34 +78,40 @@ const Table = ({
           },
         })}
       >
-        <MuiTable sx={{ minWidth: 650, tableLayout: "fixed" }} aria-label="data table">
+        <MuiTable
+          stickyHeader
+          sx={{ minWidth: 650, tableLayout: "fixed", borderCollapse: "separate", borderSpacing: 0 }}
+          aria-label="data table"
+        >
           <TableHead
             sx={(theme) => ({
-              position: "sticky",
-              top: 0,
-              zIndex: 3,
               backgroundColor: theme.palette.table.header,
               borderBottom: `1px solid ${theme.palette.divider}`,
             })}
           >
-            <TableRow>
+            <TableRow sx={{ height: 55 }}>
               {columns.map((column, index) => {
                 const sortable = column.sortable !== false;
 
                 return (
                   <TableCell
                     key={column.key}
-                    sx={{
-                      position: "sticky",
-                      top: 0,
-                      zIndex: 4,
-                      backgroundColor: "table.header",
+                    sx={(theme) => ({
                       width: column.width,
                       minWidth: column.minWidth || column.width,
                       maxWidth: column.maxWidth,
-                      borderRight: index < columns.length - 1 ? "1px solid" : undefined,
-                      borderColor: "divider",
-                    }}
+                      height: 55,
+                      py: 0,
+                      boxSizing: "border-box",
+                      zIndex: 3,
+                      backgroundColor: theme.palette.table.header,
+                      backgroundClip: "padding-box",
+                      borderBottom: `1px solid ${theme.palette.divider}`,
+                      borderRight:
+                        index < columns.length - 1
+                          ? `1px solid ${theme.palette.divider}`
+                          : undefined,
+                    })}
                   >
                     <TableSortLabel
                       active={sortable && sortBy === column.key}
@@ -134,8 +140,9 @@ const Table = ({
                 <TableRow
                   key={index}
                   sx={(theme) => ({
+                    height: 45,
                     backgroundColor:
-                      index % 2 === 0 ? "background.paper" : theme.palette.table.zebra,
+                      index % 2 === 0 ? theme.palette.table.evenRow : theme.palette.table.oddRow,
                     "&:hover": {
                       backgroundColor: theme.palette.table.hover,
                     },
@@ -148,6 +155,9 @@ const Table = ({
                         width: column.width,
                         minWidth: column.minWidth || column.width,
                         maxWidth: column.maxWidth,
+                        height: 40,
+                        py: 0,
+                        boxSizing: "border-box",
                       }}
                     >
                       {column.render ? column.render(row) : row[column.key]}
@@ -170,6 +180,9 @@ const Table = ({
           component="div"
           count={sortedData.length}
           page={page}
+          labelDisplayedRows={({ from, to, count }) =>
+            `Page ${page + 1} • ${to - from + 1} of ${count}`
+          }
           onPageChange={(event, newPage) => setPage(newPage)}
           rowsPerPage={rowsPerPage}
           onRowsPerPageChange={(event) => {

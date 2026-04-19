@@ -1,7 +1,7 @@
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
-import MenuIcon from "@mui/icons-material/Menu";
-import CloseIcon from "@mui/icons-material/Close";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import PeopleIcon from "@mui/icons-material/People";
 import LocalHospitalIcon from "@mui/icons-material/LocalHospital";
@@ -46,7 +46,7 @@ export default function Sidebar({ open, toggleSidebar }) {
           },
         }}
       >
-        {open ? <CloseIcon /> : <MenuIcon />}
+        {open ? <ChevronLeftIcon /> : <ChevronRightIcon />}
       </IconButton>
 
       <Box

@@ -19,14 +19,28 @@ export const getDoctorsColumns = ({ onEdit, onDelete }) => [
         <IconButton
           size="small"
           onClick={() => onEdit(row)}
-          sx={{ "&:focus": { outline: "none" } }}
+          sx={(theme) => ({
+            color: theme.palette.text.secondary,
+            "&:focus": { outline: "none" },
+            "&:hover": {
+              backgroundColor: theme.palette.table.header,
+              color: theme.palette.primary.main,
+            },
+          })}
         >
           <EditIcon fontSize="small" />
         </IconButton>
         <IconButton
           size="small"
           onClick={() => onDelete(row)}
-          sx={{ "&:focus": { outline: "none" } }}
+          sx={(theme) => ({
+            color: theme.palette.text.secondary,
+            "&:focus": { outline: "none" },
+            "&:hover": {
+              backgroundColor: "rgba(211, 47, 47, 0.08)",
+              color: theme.palette.error.dark,
+            },
+          })}
         >
           <DeleteIcon fontSize="small" />
         </IconButton>

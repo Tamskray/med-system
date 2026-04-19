@@ -17,8 +17,9 @@ export const theme = createTheme({
       paper: "#ffffff",
     },
     table: {
-      zebra: "#f7fbff",
-      hover: "#eaeef3",
+      evenRow: "#ffffff",
+      oddRow: "#f7fbff",
+      hover: "#ddebfd",
       header: "#e6f1ff",
     },
     divider: "#dbe1ea",
