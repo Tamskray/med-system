@@ -87,7 +87,7 @@ export class AppointmentsService {
     }
   }
 
-  static async getAllAppointments({ date, doctorId } = {}) {
+  static async getAllAppointments({ date, doctorId, patientId } = {}) {
     let query = supabase
       .from(APPOINTMENTS_TABLE)
       .select(this.getAppointmentsSelect())
@@ -99,6 +99,10 @@ export class AppointmentsService {
 
     if (date) {
       query = query.eq("appointment_date", date);
+    }
+
+    if (patientId) {
+      query = query.eq("patient_id", patientId);
     }
 
     const { data: appointments, error } = await query;

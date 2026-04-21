@@ -5,6 +5,7 @@ const Schedule = lazy(() => import("../pages/Schedule"));
 const Doctors = lazy(() => import("../pages/Doctors"));
 const Patients = lazy(() => import("../pages/Patients"));
 const DoctorDashboard = lazy(() => import("../pages/DoctorDashboard"));
+const PatientProfile = lazy(() => import("../pages/PatientProfile"));
 
 export const routes = [
   {
@@ -26,6 +27,11 @@ export const routes = [
   {
     path: "/patients",
     element: <Patients />,
+    private: true,
+  },
+  {
+    path: "/patients/:id",
+    element: <PatientProfile />,
     private: true,
   },
   {

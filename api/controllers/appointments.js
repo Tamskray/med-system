@@ -4,15 +4,17 @@ import logger from "../utils/logger.js";
 export class AppointmentsController {
   static async getAllAppointments(req, res) {
     try {
-      const { date, doctor_id } = req.query;
+      const { date, doctor_id, patient_id } = req.query;
       const appointments = await AppointmentsService.getAllAppointments({
         date,
         doctorId: doctor_id,
+        patientId: patient_id,
       });
       logger.info("Fetched appointments", {
         count: appointments.length,
         date: date || null,
         doctor_id: doctor_id || null,
+        patient_id: patient_id || null,
       });
       res.status(200).json({ success: true, data: appointments });
     } catch (error) {

@@ -5,6 +5,7 @@ import roomsRoutes from "./rooms.js";
 import patientsRoutes from "./patients.js";
 import appointmentsRoutes from "./appointments.js";
 import workingHoursRoutes from "./workingHours.js";
+import medicalRecordsRoutes from "./medicalRecords.js";
 
 const router = Router();
 
@@ -15,5 +16,6 @@ router.use("/rooms", roomsRoutes);
 router.use("/patients", patientsRoutes);
 router.use("/appointments", appointmentsRoutes);
 router.use("/working-hours", workingHoursRoutes);
+router.use("/medical-records", medicalRecordsRoutes);
 
 export default router;

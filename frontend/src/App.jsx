@@ -13,10 +13,10 @@ import { userSelector } from "./redux/selectors/authSelector";
 import { logout } from "./redux/slices/auth";
 
 const pageNames = {
-  "/schedule": "Schedule",
-  "/doctor-dashboard": "Doctor Agenda",
-  "/doctors": "Doctors",
-  "/patients": "Patients",
+  "/schedule": "Розклад",
+  "/doctor-dashboard": "Розклад лікаря",
+  "/doctors": "Лікарі",
+  "/patients": "Пацієнти",
 };
 
 function App() {
@@ -24,7 +24,9 @@ function App() {
   const dispatch = useDispatch();
   const { open, toggleSidebar } = useSidebar();
   const location = useLocation();
-  const pageName = pageNames[location.pathname] || "MED System";
+  const pageName =
+    pageNames[location.pathname] ||
+    (location.pathname.startsWith("/patients/") ? "Patient Profile" : "MED System");
 
   const handleLogout = () => {
     dispatch(logout());

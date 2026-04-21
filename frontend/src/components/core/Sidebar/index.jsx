@@ -10,10 +10,10 @@ import { Link as RouterLink } from "react-router";
 import { useLocation } from "react-router";
 
 const navItems = [
-  { path: "/schedule", label: "Schedule", icon: ScheduleIcon },
-  { path: "/doctor-dashboard", label: "Doctor Agenda", icon: EventNoteIcon },
-  { path: "/doctors", label: "Doctors", icon: LocalHospitalIcon },
-  { path: "/patients", label: "Patients", icon: PeopleIcon },
+  { path: "/schedule", label: "Розклад", icon: ScheduleIcon },
+  { path: "/doctor-dashboard", label: "Розклад лікаря", icon: EventNoteIcon },
+  { path: "/doctors", label: "Лікарі", icon: LocalHospitalIcon },
+  { path: "/patients", label: "Пацієнти", icon: PeopleIcon },
 ];
 
 export default function Sidebar({ open, toggleSidebar }) {
