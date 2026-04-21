@@ -87,11 +87,15 @@ export class AppointmentsService {
     }
   }
 
-  static async getAllAppointments({ date } = {}) {
+  static async getAllAppointments({ date, doctorId } = {}) {
     let query = supabase
       .from(APPOINTMENTS_TABLE)
       .select(this.getAppointmentsSelect())
       .order("start_time", { ascending: true });
+
+    if (doctorId) {
+      query = query.eq("doctor_id", doctorId);
+    }
 
     if (date) {
       query = query.eq("appointment_date", date);

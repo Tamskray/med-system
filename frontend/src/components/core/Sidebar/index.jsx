@@ -5,11 +5,13 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import PeopleIcon from "@mui/icons-material/People";
 import LocalHospitalIcon from "@mui/icons-material/LocalHospital";
+import EventNoteIcon from "@mui/icons-material/EventNote";
 import { Link as RouterLink } from "react-router";
 import { useLocation } from "react-router";
 
 const navItems = [
   { path: "/schedule", label: "Schedule", icon: ScheduleIcon },
+  { path: "/doctor-dashboard", label: "Doctor Agenda", icon: EventNoteIcon },
   { path: "/doctors", label: "Doctors", icon: LocalHospitalIcon },
   { path: "/patients", label: "Patients", icon: PeopleIcon },
 ];

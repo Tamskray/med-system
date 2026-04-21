@@ -14,6 +14,7 @@ import { logout } from "./redux/slices/auth";
 
 const pageNames = {
   "/schedule": "Schedule",
+  "/doctor-dashboard": "Doctor Agenda",
   "/doctors": "Doctors",
   "/patients": "Patients",
 };
