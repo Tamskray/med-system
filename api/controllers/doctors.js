@@ -1,4 +1,9 @@
-import { DoctorsService } from "../services/doctors.js";
+import {
+  DoctorsService,
+  DoctorTimeOffConflictError,
+  DoctorTimeOffValidationError,
+} from "../services/doctors.js";
+import { sseService } from "../services/sseService.js";
 import logger from "../utils/logger.js";
 
 export class DoctorsController {
@@ -134,6 +139,106 @@ export class DoctorsController {
       res.json({ success: true, data: deletedDoctor });
     } catch (error) {
       logger.error("Error deleting doctor", { id: req.params.id, message: error.message });
+      res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
+  static async getDoctorTimeOffConflicts(req, res) {
+    try {
+      const { id } = req.params;
+      const { start_date: startDate, end_date: endDate } = req.query;
+      const result = await DoctorsService.getDoctorTimeOffConflicts(Number(id), startDate, endDate);
+
+      logger.info("Fetched doctor time-off conflicts", {
+        doctor_id: Number(id),
+        start_date: result.startDate,
+        end_date: result.endDate,
+        count: result.count,
+      });
+
+      res.status(200).json({
+        success: true,
+        data: {
+          count: result.count,
+          appointments: result.appointments,
+        },
+      });
+    } catch (error) {
+      logger.error("Error fetching doctor time-off conflicts", {
+        doctor_id: req.params.id,
+        message: error.message,
+      });
+
+      if (error instanceof DoctorTimeOffValidationError) {
+        return res.status(400).json({ success: false, message: error.message });
+      }
+
+      res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
+  static async getTimeOffs(req, res) {
+    try {
+      const { date, doctorIds } = req.query;
+      const timeOffs = await DoctorsService.getTimeOffs({ date, doctorIds });
+
+      logger.info("Fetched doctor time offs", {
+        date,
+        count: timeOffs.length,
+      });
+
+      res.status(200).json({ success: true, data: timeOffs });
+    } catch (error) {
+      logger.error("Error fetching doctor time offs", {
+        date: req.query.date,
+        message: error.message,
+      });
+
+      if (error instanceof DoctorTimeOffValidationError) {
+        return res.status(400).json({ success: false, message: error.message });
+      }
+
+      res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
+  static async createDoctorTimeOff(req, res) {
+    try {
+      const { id } = req.params;
+      const { start_date: startDate, end_date: endDate, reason } = req.body;
+      const createdTimeOff = await DoctorsService.createDoctorTimeOff({
+        doctorId: Number(id),
+        startDate,
+        endDate,
+        reason,
+      });
+
+      logger.info("Doctor time off created", {
+        doctor_id: Number(id),
+        time_off_id: createdTimeOff.id,
+      });
+
+      sseService.broadcast("TIME_OFF_CREATED", createdTimeOff);
+      res.status(201).json({ success: true, data: createdTimeOff });
+    } catch (error) {
+      logger.error("Error creating doctor time off", {
+        doctor_id: req.params.id,
+        message: error.message,
+      });
+
+      if (error instanceof DoctorTimeOffValidationError) {
+        return res.status(400).json({ success: false, message: error.message });
+      }
+
+      if (error instanceof DoctorTimeOffConflictError) {
+        return res.status(409).json({
+          success: false,
+          message: error.message,
+          count: error.count,
+          appointments: error.appointments,
+        });
+      }
+
       res.status(500).json({ success: false, message: error.message });
     }
   }

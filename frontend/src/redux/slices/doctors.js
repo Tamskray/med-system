@@ -1,7 +1,8 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { showErrorToast, showSuccessToast } from "../../utils/toast";
+import { apiFetch } from "../../utils/api";
 
-const API_BASE_URL = "http://localhost:5000/api";
+import { API_BASE_URL } from "../../utils/config";
 
 const pickDoctorPayload = (doctor = {}) => ({
   last_name: doctor.last_name,
@@ -33,7 +34,7 @@ export const fetchDoctors = createAsyncThunk(
   "doctors/fetchDoctors",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/doctors`);
+      const response = await apiFetch(`${API_BASE_URL}/doctors`);
       if (!response.ok) throw new Error("Failed to fetch doctors");
       const data = await response.json();
       return (data.data || []).map(normalizeDoctor);
@@ -48,7 +49,7 @@ export const createDoctor = createAsyncThunk(
   async (doctorData, { rejectWithValue }) => {
     try {
       const payload = pickDoctorPayload(doctorData);
-      const response = await fetch(`${API_BASE_URL}/doctors`, {
+      const response = await apiFetch(`${API_BASE_URL}/doctors`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -70,7 +71,7 @@ export const updateDoctor = createAsyncThunk(
         Object.entries(pickDoctorPayload(doctorData)).filter(([, value]) => value !== undefined),
       );
 
-      const response = await fetch(`${API_BASE_URL}/doctors/${id}`, {
+      const response = await apiFetch(`${API_BASE_URL}/doctors/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -88,7 +89,7 @@ export const deleteDoctor = createAsyncThunk(
   "doctors/deleteDoctor",
   async (id, { rejectWithValue }) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/doctors/${id}`, {
+      const response = await apiFetch(`${API_BASE_URL}/doctors/${id}`, {
         method: "DELETE",
       });
       if (!response.ok) throw new Error("Failed to delete doctor");

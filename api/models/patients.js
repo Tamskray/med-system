@@ -3,6 +3,7 @@ export const PatientSchema = {
   last_name: "text",
   first_name: "text",
   middle_name: "text",
+  gender: "text",
   date_of_birth: "date",
   phone: "text",
   email: "text",

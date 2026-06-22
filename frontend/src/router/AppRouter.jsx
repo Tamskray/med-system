@@ -9,6 +9,7 @@ import Loading from "../components/core/Loading";
 
 const AppRouter = ({ user }) => {
   const isAuthorized = !!user;
+  const permissions = user?.permissions ?? {};
 
   return (
     <Suspense fallback={<Loading />}>
@@ -19,7 +20,15 @@ const AppRouter = ({ user }) => {
               <Route
                 key={route.path}
                 path={route.path}
-                element={<PrivateRoute isAllowed={isAuthorized}>{route.element}</PrivateRoute>}
+                element={
+                  <PrivateRoute
+                    isAllowed={isAuthorized}
+                    module={route.module}
+                    permissions={permissions}
+                  >
+                    {route.element}
+                  </PrivateRoute>
+                }
               />
             );
           }

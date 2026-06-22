@@ -1,7 +1,13 @@
 import { AppointmentsService, AppointmentValidationError } from "../services/appointments.js";
+import { sseService } from "../services/sseService.js";
+import { supabase } from "../supabase.js";
 import logger from "../utils/logger.js";
 
 export class AppointmentsController {
+  static streamAppointments(req, res) {
+    sseService.addClient(req, res);
+  }
+
   static async getAllAppointments(req, res) {
     try {
       const { date, doctor_id, patient_id } = req.query;
@@ -62,6 +68,7 @@ export class AppointmentsController {
         doctor_id: newAppointment.doctor_id,
         appointment_date: newAppointment.appointment_date,
       });
+      sseService.broadcast("CREATE", newAppointment);
       res.status(201).json({ success: true, data: newAppointment });
     } catch (error) {
       logger.error("Error creating appointment", { message: error.message });
@@ -121,12 +128,42 @@ export class AppointmentsController {
       }
 
       logger.info("Appointment updated", { id, status: updatedAppointment.status });
+
+      if (dataToUpdate.status !== undefined) {
+        sseService.broadcast("UPDATE_STATUS", updatedAppointment);
+      }
+
       res.json({ success: true, data: updatedAppointment });
     } catch (error) {
       logger.error("Error updating appointment", { id: req.params.id, message: error.message });
       if (error instanceof AppointmentValidationError) {
         return res.status(400).json({ success: false, message: error.message });
       }
+      res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
+  static async deleteAppointment(req, res) {
+    try {
+      const { id } = req.params;
+
+      const { data: existingAppointment, error: lookupError } = await supabase
+        .from("appointments")
+        .select("id")
+        .eq("id", id)
+        .single();
+
+      if (lookupError || !existingAppointment) {
+        logger.warn("Appointment not found for deletion", { id });
+        return res.status(404).json({ success: false, message: "Appointment not found" });
+      }
+
+      await AppointmentsService.deleteAppointment(Number(id));
+      logger.info("Appointment deleted", { id });
+      sseService.broadcast("DELETE", { id: Number(id) });
+      res.status(200).json({ success: true, message: "Appointment deleted" });
+    } catch (error) {
+      logger.error("Error deleting appointment", { id: req.params.id, message: error.message });
       res.status(500).json({ success: false, message: error.message });
     }
   }

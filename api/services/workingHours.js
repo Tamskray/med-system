@@ -7,6 +7,30 @@ export class WorkingHoursService {
     return error?.code === POSTGREST_ERROR_CODES.NO_ROWS_RETURNED;
   }
 
+  static async getWorkingHours({ doctorIds, dayOfWeek } = {}) {
+    let query = supabase.from(WORKING_HOURS_TABLE).select("*");
+
+    if (Array.isArray(doctorIds) && doctorIds.length > 0) {
+      query = query.in("doctor_id", doctorIds);
+    }
+
+    if (Number.isFinite(dayOfWeek)) {
+      query = query.eq("day_of_week", dayOfWeek);
+    }
+
+    query = query.order("doctor_id", { ascending: true }).order("day_of_week", {
+      ascending: true,
+    });
+
+    const { data: workingHours, error } = await query;
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return workingHours || [];
+  }
+
   static async getWorkingHoursByDoctorId(doctorId) {
     const { data: workingHours, error } = await supabase
       .from(WORKING_HOURS_TABLE)

@@ -31,7 +31,7 @@ export class PatientsController {
 
   static async createPatient(req, res) {
     try {
-      const { last_name, first_name, middle_name, date_of_birth, phone, email } = req.body;
+      const { last_name, first_name, middle_name, gender, date_of_birth, phone, email } = req.body;
 
       if (!last_name || !first_name) {
         logger.warn("Missing required fields for patient creation");
@@ -44,6 +44,7 @@ export class PatientsController {
         last_name,
         first_name,
         middle_name,
+        gender,
         date_of_birth,
         phone,
         email,
@@ -59,9 +60,9 @@ export class PatientsController {
   static async updatePatient(req, res) {
     try {
       const { id } = req.params;
-      const { last_name, first_name, middle_name, date_of_birth, phone, email } = req.body;
+      const { last_name, first_name, middle_name, gender, date_of_birth, phone, email } = req.body;
 
-      const payload = { last_name, first_name, middle_name, date_of_birth, phone, email };
+      const payload = { last_name, first_name, middle_name, gender, date_of_birth, phone, email };
 
       const dataToUpdate = Object.fromEntries(
         Object.entries(payload).filter(([, value]) => value !== undefined),
@@ -72,7 +73,7 @@ export class PatientsController {
         return res.status(400).json({
           success: false,
           message:
-            "Provide at least one field to update: last_name, first_name, middle_name, date_of_birth, phone, email",
+            "Provide at least one field to update: last_name, first_name, middle_name, gender, date_of_birth, phone, email",
         });
       }
 

@@ -17,6 +17,7 @@ const pageNames = {
   "/doctor-dashboard": "Розклад лікаря",
   "/doctors": "Лікарі",
   "/patients": "Пацієнти",
+  "/admin/users": "Користувачі",
 };
 
 function App() {
@@ -24,9 +25,10 @@ function App() {
   const dispatch = useDispatch();
   const { open, toggleSidebar } = useSidebar();
   const location = useLocation();
+  const isSchedulePage = location.pathname === "/schedule";
   const pageName =
     pageNames[location.pathname] ||
-    (location.pathname.startsWith("/patients/") ? "Patient Profile" : "MED System");
+    (location.pathname.startsWith("/patients/") ? "Профіль пацієнта" : "MED System");
 
   const handleLogout = () => {
     dispatch(logout());
@@ -44,7 +46,6 @@ function App() {
               backgroundColor: "background.default",
               borderRight: "1px solid",
               borderColor: "divider",
-              paddingY: 2,
               transition: "width 0.3s ease",
               overflowY: "auto",
             }}
@@ -56,8 +57,56 @@ function App() {
         <Box sx={{ display: "flex", flexDirection: "column", flex: 1, minWidth: 0 }}>
           {user && <TopNavbar pageName={pageName} user={user} onLogout={handleLogout} />}
 
-          <Box sx={{ flex: 1, minWidth: 0, overflow: "auto", paddingX: 3, paddingY: 3 }}>
-            <AppRouter user={user} />
+          <Box
+            sx={{
+              flex: 1,
+              minWidth: 0,
+              overflow: "hidden",
+              position: "relative",
+              isolation: "isolate",
+              ...(isSchedulePage
+                ? {}
+                : {
+                    "&::before": {
+                      content: '""',
+                      position: "absolute",
+                      width: 240,
+                      height: 240,
+                      right: -90,
+                      bottom: -110,
+                      borderRadius: "50%",
+                      background:
+                        "radial-gradient(circle at 35% 35%, rgba(33, 150, 243, 0.22), rgba(33, 150, 243, 0))",
+                      pointerEvents: "none",
+                      zIndex: 0,
+                    },
+                    "&::after": {
+                      content: '""',
+                      position: "absolute",
+                      width: 180,
+                      height: 180,
+                      right: 70,
+                      bottom: -80,
+                      borderRadius: "50%",
+                      background:
+                        "radial-gradient(circle at 65% 65%, rgba(0, 150, 136, 0.18), rgba(0, 150, 136, 0))",
+                      pointerEvents: "none",
+                      zIndex: 0,
+                    },
+                  }),
+            }}
+          >
+            <Box
+              sx={{
+                position: "relative",
+                zIndex: 1,
+                height: "100%",
+                overflow: "auto",
+                ...(user ? { paddingX: 3, paddingY: 3 } : {}),
+              }}
+            >
+              <AppRouter user={user} />
+            </Box>
           </Box>
         </Box>
       </Box>

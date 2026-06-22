@@ -11,8 +11,9 @@ import Switch from "@mui/material/Switch";
 import Modal from "../../../components/core/Modal";
 import WorkingHours from "./WorkingHours";
 import { DOCTOR_FORM_MODES } from "../constants";
+import { apiFetch } from "../../../utils/api";
 
-const API_BASE_URL = "http://localhost:5000/api";
+import { API_BASE_URL } from "../../../utils/config";
 
 const defaultDoctorFormValues = {
   id: null,
@@ -59,7 +60,7 @@ const getRoomMenuLabel = (room, currentDoctorId) => {
     return baseLabel;
   }
 
-  return `${baseLabel} (Shared with: ${sharedDoctors.join(", ")})`;
+  return `${baseLabel} (Спільно з: ${sharedDoctors.join(", ")})`;
 };
 
 function DoctorsForm({ open, mode, initialValues, isLoading, onClose, onSubmit }) {
@@ -71,12 +72,12 @@ function DoctorsForm({ open, mode, initialValues, isLoading, onClose, onSubmit }
   const currentDoctorId = mode === DOCTOR_FORM_MODES.EDIT ? formValues.id : null;
 
   useEffect(() => {
-    fetch(`${API_BASE_URL}/departments`)
+    apiFetch(`${API_BASE_URL}/departments`)
       .then((res) => res.json())
       .then((data) => setDepartments(data.data || []))
       .catch(() => setDepartments([]));
 
-    fetch(`${API_BASE_URL}/rooms`)
+    apiFetch(`${API_BASE_URL}/rooms`)
       .then((res) => res.json())
       .then((data) => setRooms(data.data || []))
       .catch(() => setRooms([]));
@@ -85,7 +86,7 @@ function DoctorsForm({ open, mode, initialValues, isLoading, onClose, onSubmit }
   // Fetch working hours when doctor is loaded in edit mode
   useEffect(() => {
     if (mode === DOCTOR_FORM_MODES.EDIT && currentDoctorId && open) {
-      fetch(`${API_BASE_URL}/working-hours/${currentDoctorId}`)
+      apiFetch(`${API_BASE_URL}/working-hours/${currentDoctorId}`)
         .then((res) => res.json())
         .then((data) => setWorkingHours(data.data || []))
         .catch(() => setWorkingHours([]));
@@ -109,6 +110,14 @@ function DoctorsForm({ open, mode, initialValues, isLoading, onClose, onSubmit }
     if (!formValues.last_name.trim()) errors.last_name = "Прізвище обов'язкове";
     if (!formValues.first_name.trim()) errors.first_name = "Ім'я обов'язкове";
     if (!formValues.department_id) errors.department_id = "Відділення обов'язкове";
+
+    const hasIncompleteWorkingHours = (workingHours || []).some(
+      (wh) => !String(wh.start_time || "").trim() || !String(wh.end_time || "").trim(),
+    );
+
+    if (hasIncompleteWorkingHours) {
+      errors.working_hours = "Для обраних днів потрібно вказати початок і кінець робочих годин";
+    }
 
     return errors;
   };
@@ -140,6 +149,7 @@ function DoctorsForm({ open, mode, initialValues, isLoading, onClose, onSubmit }
       onSubmit={handleSubmit}
       submitText={mode === DOCTOR_FORM_MODES.EDIT ? "Зберегти" : "Створити"}
       submitDisabled={isLoading}
+      width="660px"
     >
       <Box sx={{ display: "grid", gap: 2, mt: 1 }}>
         <TextField
@@ -237,6 +247,11 @@ function DoctorsForm({ open, mode, initialValues, isLoading, onClose, onSubmit }
           onChange={setWorkingHours}
           slotDurationMinutes={Number(formValues.slot_duration_override) || 30}
         />
+        {formErrors.working_hours && (
+          <FormHelperText error sx={{ mt: -1 }}>
+            {formErrors.working_hours}
+          </FormHelperText>
+        )}
       </Box>
     </Modal>
   );

@@ -10,15 +10,22 @@ const Modal = ({
   title,
   children,
   onSubmit,
-  submitText = "Save",
-  cancelText = "Cancel",
-  maxWidth = "sm",
+  submitText = "Зберегти",
+  cancelText = "Скасувати",
+  maxWidth = "md",
+  width = "sm",
   submitMode = BUTTON_MODES.DEFAULT,
   submitSx = {},
   submitDisabled = false,
 }) => {
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth={maxWidth}>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullWidth
+      maxWidth={width ? false : maxWidth}
+      sx={width ? { "& .MuiDialog-paper": { maxWidth: width } } : undefined}
+    >
       <DialogTitle>{title}</DialogTitle>
       <DialogContent dividers>{children}</DialogContent>
       <DialogActions>

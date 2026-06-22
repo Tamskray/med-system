@@ -1,13 +1,15 @@
 import { useState, useMemo } from "react";
 import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import TableCell from "@mui/material/TableCell";
 import MuiTable from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
-import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TablePagination from "@mui/material/TablePagination";
 import TableRow from "@mui/material/TableRow";
 import TableSortLabel from "@mui/material/TableSortLabel";
+import InboxOutlinedIcon from "@mui/icons-material/InboxOutlined";
 import { alpha } from "@mui/material/styles";
 import Loading from "../Loading";
 import { ASC, DESC } from "./constants";
@@ -16,8 +18,9 @@ const Table = ({
   data = [],
   columns,
   sx = {},
-  emptyText = "No data available.",
+  emptyText = "Немає даних.",
   isLoading = false,
+  onRowClick,
 }) => {
   const [sortBy, setSortBy] = useState(null);
   const [sortOrder, setSortOrder] = useState(ASC);
@@ -139,10 +142,12 @@ const Table = ({
               paginatedData.map((row, index) => (
                 <TableRow
                   key={index}
+                  onClick={onRowClick ? () => onRowClick(row) : undefined}
                   sx={(theme) => ({
                     height: 45,
                     backgroundColor:
                       index % 2 === 0 ? theme.palette.table.evenRow : theme.palette.table.oddRow,
+                    cursor: onRowClick ? "pointer" : "default",
                     "&:hover": {
                       backgroundColor: theme.palette.table.hover,
                     },
@@ -167,8 +172,20 @@ const Table = ({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} sx={{ textAlign: "center", py: 4 }}>
-                  {emptyText}
+                <TableCell colSpan={columns.length} sx={{ textAlign: "center", py: 6 }}>
+                  <Box
+                    sx={(theme) => ({
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 1,
+                      color: theme.palette.text.secondary,
+                    })}
+                  >
+                    <InboxOutlinedIcon sx={{ fontSize: 42, color: "text.disabled" }} />
+                    <Typography variant="subtitle2">{emptyText}</Typography>
+                  </Box>
                 </TableCell>
               </TableRow>
             )}
@@ -180,8 +197,15 @@ const Table = ({
           component="div"
           count={sortedData.length}
           page={page}
+          getItemAriaLabel={(type) => {
+            if (type === "next") return "Наступна сторінка";
+            if (type === "previous") return "Попередня сторінка";
+            if (type === "first") return "Перша сторінка";
+            if (type === "last") return "Остання сторінка";
+            return "";
+          }}
           labelDisplayedRows={({ from, to, count }) =>
-            `Page ${page + 1} • ${to - from + 1} of ${count}`
+            `Сторінка ${page + 1} • ${to - from + 1} з ${count}`
           }
           onPageChange={(event, newPage) => setPage(newPage)}
           rowsPerPage={rowsPerPage}
@@ -196,6 +220,7 @@ const Table = ({
               "&:focus": { outline: "none" },
             },
           })}
+          labelRowsPerPage="Розмір сторінки:"
         />
       )}
     </Box>

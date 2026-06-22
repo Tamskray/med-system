@@ -5,74 +5,69 @@ import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
 import MenuItem from "@mui/material/MenuItem";
 import Autocomplete from "@mui/material/Autocomplete";
-import Tooltip, { tooltipClasses } from "@mui/material/Tooltip";
-import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
-import IconButton from "@mui/material/IconButton";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import { styled } from "@mui/material/styles";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchDoctors } from "../../redux/slices/doctors";
 import { fetchPatients, createPatient } from "../../redux/slices/patients";
-import Modal from "../../components/core/Modal";
-import { showErrorToast, showSuccessToast } from "../../utils/toast";
+import { useAccess } from "../../hooks/useAccess";
+import Tooltip from "../../components/core/Tooltip";
+import DeleteConfirmModal from "../../components/core/DeleteConfirmModal";
+import AppointmentForm from "./AppointmentForm";
+import ScheduleFilters from "./Filters";
+import { showErrorToast } from "../../utils/toast";
+import { getTodayIsoDate, shiftIsoDate, timeToMinutes, minutesToTime } from "../../utils/dates";
+import {
+  getAppointmentPatientFullName,
+  getSlotPalette,
+  getSlotTooltipContent,
+  getTimeOffLabel,
+} from "./utils/schedule";
+import {
+  deleteScheduleAppointment,
+  fetchScheduleAppointments,
+  fetchScheduleTimeOffs,
+  fetchScheduleWorkingHours,
+  receiveStreamAppointment,
+  receiveStreamTimeOff,
+  saveScheduleAppointment,
+  updateStreamAppointmentStatus,
+} from "../../redux/slices/schedule";
 import PatientsForm from "../Patients/PatientsForm";
 import { PATIENT_FORM_MODES } from "../Patients/constants";
-
-const DAY_START = "08:00";
-const DAY_END = "20:00";
-const AXIS_STEP_MINUTES = 60;
-const API_BASE_URL = "http://localhost:5000/api";
-const getTodayIsoDate = () => new Date().toISOString().slice(0, 10);
-
-const toIsoDate = (date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
-
-const shiftIsoDate = (isoDate, daysDelta) => {
-  const [year, month, day] = String(isoDate).split("-").map(Number);
-  const date = new Date(year, month - 1, day);
-  date.setDate(date.getDate() + daysDelta);
-  return toIsoDate(date);
-};
-
-const getDbDayOfWeekFromIsoDate = (isoDate) => {
-  const [year, month, day] = String(isoDate).split("-").map(Number);
-  const localDate = new Date(year, month - 1, day);
-  return (localDate.getDay() + 6) % 7;
-};
-
-const timeToMinutes = (time) => {
-  const [hours, minutes] = String(time).split(":").map(Number);
-  return hours * 60 + minutes;
-};
-
-const BASE_SLOT_MINUTES = 15;
-const DAY_START_MINUTES = timeToMinutes(DAY_START);
-const DAY_END_MINUTES = timeToMinutes(DAY_END);
-const TOTAL_MINUTES = DAY_END_MINUTES - DAY_START_MINUTES;
-const TOTAL_GRID_COLUMNS = TOTAL_MINUTES / BASE_SLOT_MINUTES;
-const LEFT_COLUMN_WIDTH = 150;
-const TIMELINE_COLUMN_WIDTH = 38;
-const TIMELINE_GAP = 4;
-const TIMELINE_PADDING_X = 4;
-const TIMELINE_WIDTH = TOTAL_GRID_COLUMNS * TIMELINE_COLUMN_WIDTH;
-const TIMELINE_ROW_WIDTH =
-  TIMELINE_WIDTH + (TOTAL_GRID_COLUMNS - 1) * TIMELINE_GAP + TIMELINE_PADDING_X * 2;
-const SCHEDULE_TABLE_MIN_WIDTH = LEFT_COLUMN_WIDTH + TIMELINE_ROW_WIDTH;
-
-const minutesToTime = (minutes) => {
-  const normalizedMinutes = ((minutes % (24 * 60)) + 24 * 60) % (24 * 60);
-  const hours = Math.floor(normalizedMinutes / 60)
-    .toString()
-    .padStart(2, "0");
-  const mins = (normalizedMinutes % 60).toString().padStart(2, "0");
-  return `${hours}:${mins}`;
-};
+import {
+  DAY_START,
+  DAY_END,
+  AXIS_STEP_MINUTES,
+  BASE_SLOT_MINUTES,
+  DAY_START_MINUTES,
+  DAY_END_MINUTES,
+  BREAK,
+  DEFAULT_BOOKING_FORM_VALUES,
+} from "./constants";
+import {
+  pageWrapperSx,
+  timeTitleSx,
+  timeWeekdaySx,
+  getPaperSx,
+  getTableWrapperSx,
+  tableHeaderRowSx,
+  tableHeaderLabelCellSx,
+  axisHeaderGridSx,
+  axisHourCellSx,
+  loadingBoxSx,
+  departmentBannerSx,
+  departmentLabelSx,
+  doctorRowSx,
+  doctorInfoCellSx,
+  doctorNameSx,
+  getTimelineBodySx,
+  getSlotBoxSx,
+  slotPlusIconSx,
+  slotTimeSx,
+  slotStatusSx,
+  slotPatientNameSx,
+  emptyStateBoxSx,
+} from "./styles";
 
 const getTimeAxis = (startTime, endTime, stepMinutes = AXIS_STEP_MINUTES) => {
   const start = timeToMinutes(startTime);
@@ -102,51 +97,50 @@ const generateTimeBlocks = (startTime, endTime, slotDurationMinutes) => {
   return blocks;
 };
 
-const getAppointmentPatientFullName = (appointment) => {
-  if (!appointment?.patients) return "Без пацієнта";
+const isPastSlot = (selectedDate, slotStart, currentTime, devMode) => {
+  if (devMode) return false;
 
-  const fullName = [
-    appointment.patients.last_name,
-    appointment.patients.first_name,
-    appointment.patients.middle_name,
-  ]
-    .filter(Boolean)
-    .join(" ");
+  const today = getTodayIsoDate();
+  const isToday = selectedDate === today;
+  const isPastDate = selectedDate < today;
 
-  return fullName || "Без пацієнта";
+  if (isPastDate) return true;
+
+  if (isToday) {
+    const currentMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
+    const slotMinutes = timeToMinutes(slotStart);
+    return slotMinutes < currentMinutes;
+  }
+
+  return false;
 };
 
-const SlotTooltip = styled(({ className, ...props }) => (
-  <Tooltip {...props} classes={{ popper: className }} arrow placement="top" disableInteractive />
-))(({ theme }) => ({
-  [`& .${tooltipClasses.tooltip}`]: {
-    backgroundColor: theme.palette.common.white,
-    color: theme.palette.text.primary,
-    border: `1px solid ${theme.palette.divider}`,
-    boxShadow: theme.shadows[2],
-    fontSize: 12,
-    lineHeight: 1.35,
-    padding: theme.spacing(1, 1.25),
-    maxWidth: 260,
-  },
-  [`& .${tooltipClasses.arrow}`]: {
-    color: theme.palette.common.white,
-    "&::before": {
-      border: `1px solid ${theme.palette.divider}`,
-      boxSizing: "border-box",
-    },
-  },
-}));
+const doesTimeOffCoverDate = (timeOff, isoDate) => {
+  if (!timeOff?.start_time || !timeOff?.end_time || !isoDate) return false;
+
+  const dayStart = `${isoDate}T00:00:00.000Z`;
+  const dayEnd = `${shiftIsoDate(isoDate, 1)}T00:00:00.000Z`;
+
+  return String(timeOff.start_time) < dayEnd && String(timeOff.end_time) > dayStart;
+};
 
 function Schedule() {
   const dispatch = useDispatch();
   const { doctors, isLoading } = useSelector((state) => state.doctors);
   const { patients, isLoading: isPatientsLoading } = useSelector((state) => state.patients);
+  const devMode = useSelector((state) => state.devMode.enabled);
+  const {
+    appointments,
+    workingHoursByDoctorId,
+    timeOffsByDoctorId,
+    isAppointmentsLoading,
+    isWorkingHoursLoading,
+    isTimeOffsLoading,
+    isBookingSubmitting,
+  } = useSelector((state) => state.schedule);
+  const access = useAccess("appointments");
   const [selectedDate, setSelectedDate] = useState(getTodayIsoDate());
-  const [appointments, setAppointments] = useState([]);
-  const [isAppointmentsLoading, setIsAppointmentsLoading] = useState(false);
-  const [isWorkingHoursLoading, setIsWorkingHoursLoading] = useState(false);
-  const [isBookingSubmitting, setIsBookingSubmitting] = useState(false);
+  const [isBookingSubmitAttempted, setIsBookingSubmitAttempted] = useState(false);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [isCreatePatientModalOpen, setIsCreatePatientModalOpen] = useState(false);
   const [selectedDoctorId, setSelectedDoctorId] = useState(null);
@@ -156,14 +150,11 @@ function Schedule() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
-  const [workingHoursByDoctorId, setWorkingHoursByDoctorId] = useState({});
   const [bookingFormValues, setBookingFormValues] = useState({
-    patient_id: null,
-    status: "Scheduled",
-    appointment_type: "Consultation",
-    cancellation_reason: "",
-    notes: "",
+    ...DEFAULT_BOOKING_FORM_VALUES,
   });
+  const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
+  const [appointmentToDelete, setAppointmentToDelete] = useState(null);
 
   useEffect(() => {
     dispatch(fetchDoctors());
@@ -173,7 +164,7 @@ function Schedule() {
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
-    }, 30000);
+    }, 1000);
 
     return () => clearInterval(timer);
   }, []);
@@ -187,85 +178,51 @@ function Schedule() {
   }, [patientSearchInput]);
 
   useEffect(() => {
-    const loadAppointments = async () => {
-      setIsAppointmentsLoading(true);
+    const token = localStorage.getItem("token");
+    const streamUrl = token
+      ? `/api/appointments/stream?token=${encodeURIComponent(token)}`
+      : "/api/appointments/stream";
+    const eventSource = new EventSource(streamUrl);
+
+    eventSource.onmessage = (event) => {
       try {
-        const response = await fetch(
-          `${API_BASE_URL}/appointments?date=${encodeURIComponent(selectedDate)}`,
-        );
-        if (!response.ok) throw new Error("Failed to fetch appointments");
-        const result = await response.json();
-        setAppointments(result.data || []);
-      } catch (error) {
-        showErrorToast(error.message || "Failed to fetch appointments");
-      } finally {
-        setIsAppointmentsLoading(false);
+        const payload = JSON.parse(event.data);
+        const { action, data } = payload || {};
+
+        if (action === "CREATE") {
+          dispatch(receiveStreamAppointment(data));
+        }
+
+        if (action === "UPDATE_STATUS") {
+          dispatch(updateStreamAppointmentStatus(data));
+        }
+
+        if (action === "TIME_OFF_CREATED" && doesTimeOffCoverDate(data, selectedDate)) {
+          dispatch(receiveStreamTimeOff(data));
+        }
+      } catch {
+        // Ignore malformed SSE messages and keep current UI state.
       }
     };
-
-    loadAppointments();
-  }, [selectedDate]);
-
-  useEffect(() => {
-    let isActive = true;
-
-    const loadWorkingHours = async () => {
-      const allDoctors = doctors || [];
-
-      if (!allDoctors.length) {
-        if (isActive) setWorkingHoursByDoctorId({});
-        return;
-      }
-
-      setIsWorkingHoursLoading(true);
-      try {
-        const dayOfWeek = getDbDayOfWeekFromIsoDate(selectedDate);
-        const entries = await Promise.all(
-          allDoctors.map(async (doctor) => {
-            try {
-              const response = await fetch(`${API_BASE_URL}/working-hours/${doctor.id}`);
-              if (!response.ok) {
-                return [doctor.id, null];
-              }
-
-              const result = await response.json();
-              const dayHours = (result.data || []).find(
-                (workingHour) => Number(workingHour.day_of_week) === dayOfWeek,
-              );
-
-              if (!dayHours) {
-                return [doctor.id, null];
-              }
-
-              return [
-                doctor.id,
-                {
-                  start: String(dayHours.start_time || "").slice(0, 5),
-                  end: String(dayHours.end_time || "").slice(0, 5),
-                },
-              ];
-            } catch {
-              return [doctor.id, null];
-            }
-          }),
-        );
-
-        if (isActive) {
-          setWorkingHoursByDoctorId(Object.fromEntries(entries));
-        }
-      } finally {
-        if (isActive) {
-          setIsWorkingHoursLoading(false);
-        }
-      }
-    };
-
-    loadWorkingHours();
 
     return () => {
-      isActive = false;
+      eventSource.close();
     };
-  }, [doctors, selectedDate]);
+  }, [dispatch, selectedDate]);
+
+  useEffect(() => {
+    dispatch(fetchScheduleAppointments(selectedDate));
+  }, [dispatch, selectedDate]);
+
+  useEffect(() => {
+    const doctorIds = (doctors || []).map((doctor) => doctor.id).filter(Boolean);
+    dispatch(fetchScheduleWorkingHours({ selectedDate, doctorIds }));
+  }, [dispatch, doctors, selectedDate]);
+
+  useEffect(() => {
+    const doctorIds = (doctors || []).map((doctor) => doctor.id).filter(Boolean);
+    dispatch(fetchScheduleTimeOffs({ selectedDate, doctorIds }));
+  }, [dispatch, doctors, selectedDate]);
 
   const doctorsByDepartment = useMemo(() => {
     if (!doctors?.length) return {};
@@ -318,7 +275,7 @@ function Schedule() {
         const filteredDoctors = departmentDoctors.filter((doctor) =>
           appointments.some((appointment) => {
             if (Number(appointment.doctor_id) !== Number(doctor.id)) return false;
-            if (appointment.status === "Cancelled") return false;
+            if (appointment.status === "Скасовано") return false;
 
             return getAppointmentPatientFullName(appointment).toLowerCase().includes(patientNeedle);
           }),
@@ -345,13 +302,7 @@ function Schedule() {
       start: block.start,
       end: block.end,
     });
-    setBookingFormValues({
-      patient_id: null,
-      status: "Scheduled",
-      appointment_type: "Consultation",
-      cancellation_reason: "",
-      notes: "",
-    });
+    setBookingFormValues({ ...DEFAULT_BOOKING_FORM_VALUES });
     setSelectedAppointment(null);
     setIsBookingModalOpen(true);
   };
@@ -368,8 +319,9 @@ function Schedule() {
     setSelectedAppointment(appointment);
     setBookingFormValues({
       patient_id: appointment.patient_id ?? null,
-      status: appointment.status || "Scheduled",
-      appointment_type: appointment.appointment_type || "Consultation",
+      status: appointment.status || DEFAULT_BOOKING_FORM_VALUES.status,
+      appointment_type:
+        appointment.appointment_type || DEFAULT_BOOKING_FORM_VALUES.appointment_type,
       cancellation_reason: appointment.cancellation_reason || "",
       notes: appointment.notes || "",
     });
@@ -380,6 +332,7 @@ function Schedule() {
     setIsBookingModalOpen(false);
     setSelectedSlot(null);
     setSelectedAppointment(null);
+    setIsBookingSubmitAttempted(false);
   };
 
   const handleBookingFieldChange = (field) => (event) => {
@@ -408,84 +361,44 @@ function Schedule() {
     }
   };
 
-  const handleBookingSubmit = () => {
+  const handleDeleteAppointment = async (appointmentId) => {
+    try {
+      await dispatch(deleteScheduleAppointment(appointmentId)).unwrap();
+      setDeleteConfirmationOpen(false);
+      setAppointmentToDelete(null);
+    } catch {
+      // Error toast is handled in the redux slice.
+    }
+  };
+
+  const handleBookingSubmit = async () => {
     if (!selectedSlot) return;
+    setIsBookingSubmitAttempted(true);
+    const isBreak = bookingFormValues.appointment_type === BREAK;
+    if (!isBreak && !bookingFormValues.patient_id) return;
 
-    const upsertAppointment = async () => {
-      setIsBookingSubmitting(true);
-      try {
-        const payload = {
-          patient_id: bookingFormValues.patient_id,
-          appointment_date: selectedAppointment?.appointment_date || selectedDate,
-          start_time: `${selectedAppointment?.appointment_date || selectedDate}T${selectedSlot.start}:00.000Z`,
-          end_time: `${selectedAppointment?.appointment_date || selectedDate}T${selectedSlot.end}:00.000Z`,
-          appointment_type: bookingFormValues.appointment_type || "Consultation",
-          status: bookingFormValues.status || "Scheduled",
-          cancellation_reason: bookingFormValues.cancellation_reason || null,
-          notes: bookingFormValues.notes,
-        };
-
-        const isEditMode = Boolean(selectedAppointment?.id);
-        const requestPayload = isEditMode
-          ? payload
-          : { ...payload, doctor_id: selectedSlot.doctorId };
-
-        const response = await fetch(
-          isEditMode
-            ? `${API_BASE_URL}/appointments/${selectedAppointment.id}`
-            : `${API_BASE_URL}/appointments`,
-          {
-            method: isEditMode ? "PUT" : "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(requestPayload),
-          },
-        );
-
-        if (!response.ok) {
-          const fallbackMessage = isEditMode
-            ? "Failed to update appointment"
-            : "Failed to create appointment";
-          let serverMessage = fallbackMessage;
-
-          try {
-            const errorResult = await response.json();
-            serverMessage = errorResult?.message || fallbackMessage;
-          } catch {
-            serverMessage = fallbackMessage;
-          }
-
-          throw new Error(serverMessage);
-        }
-
-        const result = await response.json();
-        const savedAppointment = result.data;
-
-        setAppointments((prev) => {
-          if (isEditMode) {
-            return prev.map((appointment) =>
-              appointment.id === savedAppointment.id ? savedAppointment : appointment,
-            );
-          }
-          return [...prev, savedAppointment];
-        });
-
-        showSuccessToast(isEditMode ? "Запис оновлено" : "Запис успішно створено");
-        handleCloseBookingModal();
-      } catch (error) {
-        showErrorToast(error.message || "Failed to save appointment");
-      } finally {
-        setIsBookingSubmitting(false);
-      }
-    };
-
-    upsertAppointment();
+    try {
+      await dispatch(
+        saveScheduleAppointment({
+          appointmentId: selectedAppointment?.id ?? null,
+          doctorId: selectedSlot.doctorId,
+          selectedDate: selectedAppointment?.appointment_date || selectedDate,
+          selectedSlot,
+          bookingFormValues,
+        }),
+      ).unwrap();
+      handleCloseBookingModal();
+    } catch {
+      // Error toast is handled in the redux slice.
+    }
   };
 
   const getAppointmentForSlot = (doctorId, block) => {
     return (
       appointments.find((appointment) => {
         if (Number(appointment.doctor_id) !== Number(doctorId)) return false;
-        if (appointment.status === "Cancelled") return false;
+        // if we need to show cancelled appoitnments
+        if (appointment.status === "Скасовано") return false;
 
         const startTime = String(appointment.start_time || "").slice(11, 16);
         const endTime = String(appointment.end_time || "").slice(11, 16);
@@ -495,201 +408,56 @@ function Schedule() {
     );
   };
 
-  const getSlotPalette = (appointment, slotIndex) => {
-    if (!appointment) {
-      return {
-        bg: slotIndex % 2 === 0 ? "grey.50" : "grey.100",
-        hoverBg: "primary.50",
-        text: "text.secondary",
-      };
-    }
-
-    const status = appointment.status || "Scheduled";
-    if (status === "Completed") {
-      return { bg: "info.light", hoverBg: "info.main", text: "text.primary" };
-    }
-    if (status === "Cancelled") {
-      return { bg: "error.light", hoverBg: "error.main", text: "text.primary" };
-    }
-    return { bg: "success.light", hoverBg: "success.main", text: "text.primary" };
-  };
-
-  const isScheduleLoading = isAppointmentsLoading || isWorkingHoursLoading;
-
-  const getSlotTooltipContent = (block, occupied, appointment) => {
-    if (!occupied) {
-      return [
-        `Час: ${block.start} - ${block.end}`,
-        "Статус: Вільний слот",
-        "Натисніть, щоб створити запис",
-      ].join("\n");
-    }
-
-    return [
-      `Час: ${block.start} - ${block.end}`,
-      `Статус: ${appointment.status || "Scheduled"}`,
-      `Пацієнт: ${getAppointmentPatientFullName(appointment)}`,
-      `Тип: ${appointment.appointment_type || "Consultation"}`,
-      "Натисніть, щоб редагувати",
-    ].join("\n");
-  };
+  const isScheduleLoading = isAppointmentsLoading || isWorkingHoursLoading || isTimeOffsLoading;
 
   return (
-    <Box sx={{ minWidth: 0, width: "100%", overflowX: "hidden" }}>
-      <Typography variant="h4" sx={{ mb: 2, fontWeight: 700, lineHeight: 1 }}>
+    <Box sx={pageWrapperSx}>
+      <Typography variant="h4" sx={timeTitleSx}>
         {currentTime.toLocaleTimeString("uk-UA", {
           hour: "2-digit",
           minute: "2-digit",
         })}
+        <Typography component="span" variant="h6" sx={timeWeekdaySx}>
+          {(() => {
+            const weekday = currentTime.toLocaleDateString("uk-UA", { weekday: "long" });
+            return weekday.charAt(0).toUpperCase() + weekday.slice(1);
+          })()}
+        </Typography>
       </Typography>
 
-      <Box
-        sx={{
-          mb: 2,
-          display: "grid",
-          gridTemplateColumns: {
-            xs: "1fr",
-            sm: "repeat(2, minmax(160px, 1fr))",
-            md: "repeat(3, minmax(160px, 1fr))",
-            lg: "repeat(5, minmax(160px, 1fr))",
-          },
-          gap: 2,
-          alignItems: "end",
+      <ScheduleFilters
+        selectedDate={selectedDate}
+        onPreviousDay={() => setSelectedDate((prev) => shiftIsoDate(prev, -1))}
+        onNextDay={() => setSelectedDate((prev) => shiftIsoDate(prev, 1))}
+        onDateChange={(value) => setSelectedDate(value)}
+        selectedDepartment={selectedDepartment}
+        onDepartmentChange={(e) => {
+          setSelectedDepartment(e.target.value);
+          setSelectedDoctorId(null);
         }}
-      >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-          <IconButton
-            aria-label="Попередній день"
-            onClick={() => setSelectedDate((prev) => shiftIsoDate(prev, -1))}
-            size="small"
-          >
-            <ChevronLeftIcon fontSize="small" />
-          </IconButton>
-          <TextField
-            label="Дата"
-            type="date"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            size="small"
-            sx={{ flex: "0 0 auto", width: 140 }}
-            InputLabelProps={{ shrink: true }}
-          />
-          <IconButton
-            aria-label="Наступний день"
-            onClick={() => setSelectedDate((prev) => shiftIsoDate(prev, 1))}
-            size="small"
-          >
-            <ChevronRightIcon fontSize="small" />
-          </IconButton>
-        </Box>
-        <TextField
-          label="Відділення"
-          select
-          value={selectedDepartment}
-          onChange={(e) => {
-            setSelectedDepartment(e.target.value);
-            setSelectedDoctorId(null);
-          }}
-          size="small"
-          fullWidth
-          SelectProps={{ MenuProps: { sx: { maxHeight: 300 } } }}
-        >
-          <MenuItem value="">Усі</MenuItem>
-          {Object.keys(doctorsByDepartment)
-            .sort()
-            .map((dept) => (
-              <MenuItem key={dept} value={dept}>
-                {dept}
-              </MenuItem>
-            ))}
-        </TextField>
-        <Autocomplete
-          options={selectedDepartment ? doctorsByDepartment[selectedDepartment] || [] : allDoctors}
-          value={(allDoctors || []).find((d) => Number(d.id) === Number(selectedDoctorId)) || null}
-          onChange={(_, doctor) => setSelectedDoctorId(doctor?.id ?? null)}
-          getOptionLabel={(option) =>
-            [option.last_name, option.first_name].filter(Boolean).join(" ")
-          }
-          isOptionEqualToValue={(option, value) => Number(option.id) === Number(value.id)}
-          renderInput={(params) => (
-            <TextField {...params} label="Лікар" size="small" placeholder="Пошук" />
-          )}
-          size="small"
-          fullWidth
-        />
-        <TextField
-          label="Пошук пацієнта"
-          value={patientSearchInput}
-          onChange={(e) => setPatientSearchInput(e.target.value)}
-          placeholder="Пацієнт у слотах"
-          fullWidth
-          size="small"
-        />
-      </Box>
+        departmentOptions={Object.keys(doctorsByDepartment).sort()}
+        selectedDoctorId={selectedDoctorId}
+        onDoctorChange={(_, doctor) => setSelectedDoctorId(doctor?.id ?? null)}
+        doctorOptions={
+          selectedDepartment ? doctorsByDepartment[selectedDepartment] || [] : allDoctors
+        }
+        patientSearchInput={patientSearchInput}
+        onPatientSearchInputChange={(e) => setPatientSearchInput(e.target.value)}
+      />
 
-      <Paper
-        variant="outlined"
-        sx={{
-          width: "100%",
-          maxWidth: "100%",
-          minWidth: 0,
-          maxHeight: "calc(100vh - 220px)",
-          borderRadius: 2,
-          overflowX: isScheduleLoading ? "hidden" : "auto",
-          overflowY: isScheduleLoading ? "hidden" : "auto",
-        }}
-      >
-        <Box
-          sx={{
-            width: isScheduleLoading ? "100%" : "max-content",
-            minWidth: isScheduleLoading ? 0 : SCHEDULE_TABLE_MIN_WIDTH,
-          }}
-        >
+      <Paper variant="outlined" sx={getPaperSx(isScheduleLoading)}>
+        <Box sx={getTableWrapperSx(isScheduleLoading)}>
           {!isScheduleLoading && (
-            <Box
-              sx={{
-                display: "grid",
-                width: SCHEDULE_TABLE_MIN_WIDTH,
-                gridTemplateColumns: `${LEFT_COLUMN_WIDTH}px ${TIMELINE_ROW_WIDTH}px`,
-                position: "sticky",
-                top: 0,
-                zIndex: 3,
-                borderBottom: "1px solid",
-                borderColor: "divider",
-                bgcolor: "grey.50",
-              }}
-            >
-              <Box sx={{ p: 1.5, borderRight: "1px solid", borderColor: "divider" }}>
+            <Box sx={tableHeaderRowSx}>
+              <Box sx={tableHeaderLabelCellSx}>
                 <Typography variant="subtitle2" color="text.secondary">
                   Лікар / Кабінет
                 </Typography>
               </Box>
-              <Box
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: `repeat(${TOTAL_GRID_COLUMNS}, ${TIMELINE_COLUMN_WIDTH}px)`,
-                  columnGap: `${TIMELINE_GAP}px`,
-                  px: `${TIMELINE_PADDING_X}px`,
-                }}
-              >
+              <Box sx={axisHeaderGridSx}>
                 {axisHours.map((hour) => {
-                  // An hour is 60 mins. 60 / 15 = 4 columns.
-                  const columnSpan = 60 / BASE_SLOT_MINUTES;
-
                   return (
-                    <Box
-                      key={hour}
-                      sx={{
-                        gridColumn: `span ${columnSpan}`, // Forces it to take up exact proportional space
-                        p: 1,
-                        textAlign: "center",
-                        borderRight: "1px solid",
-                        borderColor: "divider",
-                        fontSize: 12,
-                        fontWeight: 600,
-                        color: "text.secondary",
-                      }}
-                    >
+                    <Box key={hour} sx={axisHourCellSx}>
                       {hour}
                     </Box>
                   );
@@ -699,15 +467,7 @@ function Schedule() {
           )}
 
           {isScheduleLoading ? (
-            <Box
-              sx={{
-                width: "100%",
-                minHeight: 260,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
+            <Box sx={loadingBoxSx}>
               <CircularProgress size={36} />
             </Box>
           ) : (
@@ -715,29 +475,21 @@ function Schedule() {
               {Object.entries(filteredDoctorsByDepartment).map(
                 ([departmentName, departmentDoctors]) => (
                   <Box key={departmentName}>
-                    <Box
-                      sx={{
-                        width: "100%",
-                        minWidth: SCHEDULE_TABLE_MIN_WIDTH,
-                        boxSizing: "border-box",
-                        px: 2,
-                        py: 1,
-                        bgcolor: "primary.light",
-                        color: "primary.contrastText",
-                        borderBottom: "1px solid",
-                        borderColor: "divider",
-                      }}
-                    >
-                      <Typography variant="subtitle2">{departmentName}</Typography>
+                    <Box sx={departmentBannerSx}>
+                      <Box sx={departmentLabelSx}>
+                        <Typography variant="subtitle2">{departmentName}</Typography>
+                      </Box>
                     </Box>
 
                     {departmentDoctors.map((doctor) => {
                       const slotDuration =
                         doctor.active_slot_duration ?? doctor.slot_duration_override ?? 30;
                       const doctorWorkingHours = workingHoursByDoctorId[doctor.id];
+                      const doctorTimeOff = timeOffsByDoctorId[doctor.id] || null;
                       const isDoctorActive = Boolean(doctor.is_active);
                       const isDoctorWorking =
                         isDoctorActive &&
+                        !doctorTimeOff &&
                         Boolean(doctorWorkingHours?.start) &&
                         Boolean(doctorWorkingHours?.end);
                       const timeBlocks = isDoctorWorking
@@ -753,28 +505,9 @@ function Schedule() {
                         : [];
 
                       return (
-                        <Box
-                          key={doctor.id}
-                          sx={{
-                            display: "grid",
-                            width: SCHEDULE_TABLE_MIN_WIDTH,
-                            gridTemplateColumns: `${LEFT_COLUMN_WIDTH}px ${TIMELINE_ROW_WIDTH}px`,
-                            borderBottom: "1px solid",
-                            borderColor: "divider",
-                          }}
-                        >
-                          <Box
-                            sx={{
-                              p: 1.5,
-                              borderRight: "1px solid",
-                              borderColor: "divider",
-                              display: "flex",
-                              flexDirection: "column",
-                              justifyContent: "center",
-                              gap: 0.25,
-                            }}
-                          >
-                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        <Box key={doctor.id} sx={doctorRowSx}>
+                          <Box sx={doctorInfoCellSx}>
+                            <Typography variant="body2" sx={doctorNameSx}>
                               {doctor.last_name}
                             </Typography>
                             <Typography variant="caption" color="text.secondary">
@@ -785,41 +518,30 @@ function Schedule() {
                             </Typography>
                           </Box>
 
-                          <Box
-                            sx={{
-                              ...(isDoctorWorking
-                                ? {
-                                    display: "grid",
-                                    gridTemplateColumns: `repeat(${TOTAL_GRID_COLUMNS}, ${TIMELINE_COLUMN_WIDTH}px)`,
-                                    columnGap: `${TIMELINE_GAP}px`,
-                                  }
-                                : {
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                  }),
-                              px: `${TIMELINE_PADDING_X}px`,
-                              py: 4 / 8,
-                              bgcolor: "grey.100",
-                              minHeight: 82,
-                            }}
-                          >
+                          <Box sx={getTimelineBodySx(isDoctorWorking)}>
                             {!isDoctorWorking && (
-                              <Typography variant="caption" color="text.secondary">
-                                Лікар не працює у цей день
-                              </Typography>
+                              <Box sx={{ textAlign: "center" }}>
+                                <Typography variant="caption" color="text.secondary">
+                                  {getTimeOffLabel(doctorTimeOff)}
+                                </Typography>
+                              </Box>
                             )}
 
                             {timeBlocks.map((block, slotIndex) => {
                               const appointment = getAppointmentForSlot(doctor.id, block);
                               const occupied = Boolean(appointment);
+                              const isPast = isPastSlot(
+                                selectedDate,
+                                block.start,
+                                currentTime,
+                                devMode,
+                              );
                               const palette = getSlotPalette(appointment, slotIndex);
                               const slotStatus = occupied
-                                ? appointment.status || "Scheduled"
-                                : "Free";
+                                ? appointment.status || "Заплановано"
+                                : "Вільно";
 
-                              // Calculate exact visual width based on time
-                              const span = slotDuration / BASE_SLOT_MINUTES; // 30min = span 2, 45min = span 3, 60min = span 4
+                              const span = slotDuration / BASE_SLOT_MINUTES;
                               const startColumn =
                                 Math.floor(
                                   (timeToMinutes(block.start) - DAY_START_MINUTES) /
@@ -827,84 +549,58 @@ function Schedule() {
                                 ) + 1;
 
                               return (
-                                <SlotTooltip
+                                <Tooltip
                                   key={`${doctor.id}-${block.start}`}
-                                  title={getSlotTooltipContent(block, occupied, appointment)}
+                                  title={
+                                    !occupied && isPast
+                                      ? "Минула дата"
+                                      : getSlotTooltipContent(
+                                          block,
+                                          occupied,
+                                          appointment,
+                                          getAppointmentPatientFullName,
+                                          access.create,
+                                        )
+                                  }
                                   enterDelay={180}
                                 >
                                   <Box
                                     onClick={() => {
-                                      if (occupied) {
-                                        openEditAppointmentModal(doctor, block, appointment);
-                                      } else {
+                                      if (occupied && access.update) {
+                                        if (appointment.appointment_type === BREAK) {
+                                          setAppointmentToDelete(appointment);
+                                          setDeleteConfirmationOpen(true);
+                                        } else {
+                                          openEditAppointmentModal(doctor, block, appointment);
+                                        }
+                                      } else if (!occupied && !isPast && access.create) {
                                         openBookingModal(doctor, block);
                                       }
                                     }}
-                                    sx={{
-                                      gridColumn: `${startColumn} / span ${span}`,
-                                      minHeight: 74,
-                                      borderRadius: 1,
-                                      border: "1px solid",
-                                      borderColor: "divider",
-                                      cursor: "pointer",
-                                      display: "flex",
-                                      flexDirection: "column",
-                                      alignItems: "center",
-                                      justifyContent: "center",
-                                      gap: 0.25,
-                                      px: 0.4,
-                                      textAlign: "center",
-                                      fontFamily: "Roboto, Arial, sans-serif",
-                                      color: palette.text,
-                                      backgroundColor: palette.bg,
-                                      overflow: "hidden", // Prevents text from pushing the cell wider
-                                      transition: "background-color 120ms ease",
-                                      "&:hover": occupied
-                                        ? {
-                                            backgroundColor: palette.hoverBg,
-                                            color: "text.primary",
-                                          }
-                                        : { backgroundColor: "action.hover" },
-                                    }}
+                                    sx={getSlotBoxSx({
+                                      startColumn,
+                                      span,
+                                      occupied,
+                                      isPast,
+                                      canCreate: access.create,
+                                      canUpdate: access.update,
+                                      palette,
+                                    })}
                                   >
-                                    {!occupied && (
-                                      <Typography
-                                        sx={{ fontSize: 14, lineHeight: 1, fontWeight: 700 }}
-                                      >
-                                        +
-                                      </Typography>
+                                    {!occupied && !isPast && access.create && (
+                                      <Typography sx={slotPlusIconSx}>+</Typography>
                                     )}
-                                    <Typography
-                                      sx={{
-                                        fontSize: 10,
-                                        lineHeight: 1.1,
-                                        fontWeight: 700,
-                                        whiteSpace: "nowrap",
-                                      }}
-                                    >
-                                      {block.start}
-                                    </Typography>
-                                    <Typography
-                                      sx={{ fontSize: 10, lineHeight: 1.1, whiteSpace: "nowrap" }}
-                                    >
-                                      {slotStatus}
-                                    </Typography>
+                                    <Typography sx={slotTimeSx}>{block.start}</Typography>
+                                    <Typography sx={slotStatusSx}>{slotStatus}</Typography>
                                     {occupied && (
-                                      <Typography
-                                        sx={{
-                                          fontSize: 9,
-                                          lineHeight: 1.1,
-                                          maxWidth: "100%",
-                                          whiteSpace: "nowrap",
-                                          textOverflow: "ellipsis",
-                                          overflow: "hidden",
-                                        }}
-                                      >
-                                        {getAppointmentPatientFullName(appointment)}
+                                      <Typography sx={slotPatientNameSx}>
+                                        {appointment.appointment_type === BREAK
+                                          ? "Перерва"
+                                          : getAppointmentPatientFullName(appointment)}
                                       </Typography>
                                     )}
                                   </Box>
-                                </SlotTooltip>
+                                </Tooltip>
                               );
                             })}
                           </Box>
@@ -916,7 +612,7 @@ function Schedule() {
               )}
 
               {!isLoading && Object.keys(filteredDoctorsByDepartment).length === 0 && (
-                <Box sx={{ p: 3 }}>
+                <Box sx={emptyStateBoxSx}>
                   <Typography color="text.secondary">
                     Немає даних для відображення за поточними фільтрами.
                   </Typography>
@@ -927,115 +623,23 @@ function Schedule() {
         </Box>
       </Paper>
 
-      <Modal
+      <AppointmentForm
         open={isBookingModalOpen}
         onClose={handleCloseBookingModal}
-        title={selectedAppointment ? "Редагувати запис" : "Створити запис"}
         onSubmit={handleBookingSubmit}
-        submitText={selectedAppointment ? "Оновити" : "Підтвердити"}
-        cancelText="Скасувати"
-        submitDisabled={isBookingSubmitting}
-      >
-        <Box sx={{ display: "grid", gap: 2, mt: 1 }}>
-          <Box sx={{ p: 1.5, borderRadius: 1, bgcolor: "grey.100" }}>
-            <Typography variant="body2" sx={{ fontWeight: 600 }}>
-              {selectedSlot?.doctorName}
-            </Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
-              {selectedSlot?.departmentName} | Кабінет: {selectedSlot?.roomNumber}
-            </Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
-              {selectedAppointment?.appointment_date || selectedDate} | {selectedSlot?.start} -{" "}
-              {selectedSlot?.end}
-            </Typography>
-          </Box>
-
-          <Autocomplete
-            options={patients || []}
-            loading={isPatientsLoading}
-            value={
-              (patients || []).find((patient) => patient.id === bookingFormValues.patient_id) ||
-              null
-            }
-            onChange={handlePatientSelectionChange}
-            getOptionLabel={(option) =>
-              [option.last_name, option.first_name, option.middle_name].filter(Boolean).join(" ")
-            }
-            isOptionEqualToValue={(option, value) => option.id === value.id}
-            renderOption={(props, option) => (
-              <li {...props} key={option.id}>
-                {[option.last_name, option.first_name, option.middle_name]
-                  .filter(Boolean)
-                  .join(" ")}
-              </li>
-            )}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Пацієнт"
-                size="small"
-                placeholder="Пошук пацієнта..."
-                autoComplete="off"
-                inputProps={{
-                  ...params.inputProps,
-                  autoComplete: "new-password",
-                  "data-lpignore": "true",
-                  "data-1p-ignore": "true",
-                }}
-              />
-            )}
-            noOptionsText="Пацієнтів не знайдено"
-          />
-
-          <Button variant="outlined" onClick={handleOpenCreatePatientModal}>
-            Додати нового пацієнта
-          </Button>
-
-          <TextField
-            label="Статус"
-            select
-            value={bookingFormValues.status}
-            onChange={handleBookingFieldChange("status")}
-            fullWidth
-            size="small"
-          >
-            <MenuItem value="Scheduled">Scheduled</MenuItem>
-            <MenuItem value="Completed">Completed</MenuItem>
-            <MenuItem value="Cancelled">Cancelled</MenuItem>
-          </TextField>
-          <TextField
-            label="Тип прийому"
-            value={bookingFormValues.appointment_type}
-            onChange={handleBookingFieldChange("appointment_type")}
-            fullWidth
-            size="small"
-          />
-          <TextField
-            label="Причина скасування"
-            value={bookingFormValues.cancellation_reason}
-            onChange={handleBookingFieldChange("cancellation_reason")}
-            fullWidth
-            size="small"
-            disabled={bookingFormValues.status !== "Cancelled"}
-            sx={{ display: selectedAppointment ? "block" : "none" }}
-          />
-          <TextField
-            label="Нотатки"
-            value={bookingFormValues.notes}
-            onChange={handleBookingFieldChange("notes")}
-            autoComplete="off"
-            inputProps={{
-              autoComplete: "new-password",
-              "data-lpignore": "true",
-              "data-1p-ignore": "true",
-            }}
-            fullWidth
-            size="small"
-            multiline
-            minRows={3}
-          />
-        </Box>
-      </Modal>
+        onDelete={handleDeleteAppointment}
+        selectedAppointment={selectedAppointment}
+        selectedSlot={selectedSlot}
+        selectedDate={selectedDate}
+        patients={patients}
+        isPatientsLoading={isPatientsLoading}
+        isSubmitting={isBookingSubmitting}
+        isSubmitAttempted={isBookingSubmitAttempted}
+        formValues={bookingFormValues}
+        onFieldChange={handleBookingFieldChange}
+        onPatientChange={handlePatientSelectionChange}
+        onAddPatient={handleOpenCreatePatientModal}
+      />
 
       <PatientsForm
         key={isCreatePatientModalOpen ? "create-patient-open" : "create-patient-closed"}
@@ -1045,6 +649,18 @@ function Schedule() {
         isLoading={isPatientsLoading}
         onClose={handleCloseCreatePatientModal}
         onSubmit={handleCreatePatientSubmit}
+      />
+
+      <DeleteConfirmModal
+        open={deleteConfirmationOpen}
+        onClose={() => setDeleteConfirmationOpen(false)}
+        onConfirm={() => handleDeleteAppointment(appointmentToDelete?.id)}
+        title="Видалити перерву?"
+        submitText="Видалити"
+        cancelText="Скасувати"
+        customWarningText={
+          <>Ви впевнені, що хочете видалити цю перерву? Цю дію не можна скасувати.</>
+        }
       />
     </Box>
   );

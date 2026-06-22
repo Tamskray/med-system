@@ -9,22 +9,31 @@ function DeleteConfirmModal({
   onConfirm,
   itemName,
   itemLabel = "item",
+  title = "Підтвердіть видалення",
+  submitText = "Видалити",
+  cancelText = "Скасувати",
+  customWarningText,
   isLoading = false,
 }) {
+  const warningText = customWarningText || (
+    <>
+      Ви впевнені, що хочете видалити <strong>{itemName || `цей ${itemLabel}`}</strong>?
+    </>
+  );
+
   return (
     <Modal
       open={open}
       onClose={onClose}
-      title="Confirm Delete"
+      title={title}
       onSubmit={onConfirm}
-      submitText="Delete"
+      submitText={submitText}
+      cancelText={cancelText}
       submitMode={BUTTON_MODES.ERROR_FILLED}
       submitDisabled={isLoading}
     >
       <Box sx={{ mt: 1 }}>
-        <Typography>
-          Are you sure you want to delete <strong>{itemName || `this ${itemLabel}`}</strong>?
-        </Typography>
+        <Typography>{warningText}</Typography>
       </Box>
     </Modal>
   );

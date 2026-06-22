@@ -1,12 +1,14 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { showErrorToast, showSuccessToast } from "../../utils/toast";
+import { apiFetch } from "../../utils/api";
 
-const API_BASE_URL = "http://localhost:5000/api";
+import { API_BASE_URL } from "../../utils/config";
 
 const pickPatientPayload = (patient = {}) => ({
   last_name: patient.last_name,
   first_name: patient.first_name,
   middle_name: patient.middle_name,
+  gender: patient.gender,
   date_of_birth: patient.date_of_birth,
   phone: patient.phone,
   email: patient.email,
@@ -17,6 +19,7 @@ const normalizePatient = (patient = {}) => ({
   last_name: patient.last_name ?? "",
   first_name: patient.first_name ?? "",
   middle_name: patient.middle_name ?? "",
+  gender: patient.gender ?? "",
   date_of_birth: patient.date_of_birth ?? null,
   phone: patient.phone ?? "",
   email: patient.email ?? "",
@@ -27,7 +30,7 @@ export const fetchPatients = createAsyncThunk(
   "patients/fetchPatients",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/patients`);
+      const response = await apiFetch(`${API_BASE_URL}/patients`);
       if (!response.ok) throw new Error("Failed to fetch patients");
       const data = await response.json();
       return (data.data || []).map(normalizePatient);
@@ -42,7 +45,7 @@ export const createPatient = createAsyncThunk(
   async (patientData, { rejectWithValue }) => {
     try {
       const payload = pickPatientPayload(patientData);
-      const response = await fetch(`${API_BASE_URL}/patients`, {
+      const response = await apiFetch(`${API_BASE_URL}/patients`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -63,7 +66,7 @@ export const updatePatient = createAsyncThunk(
       const payload = Object.fromEntries(
         Object.entries(pickPatientPayload(patientData)).filter(([, value]) => value !== undefined),
       );
-      const response = await fetch(`${API_BASE_URL}/patients/${id}`, {
+      const response = await apiFetch(`${API_BASE_URL}/patients/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -81,7 +84,7 @@ export const deletePatient = createAsyncThunk(
   "patients/deletePatient",
   async (id, { rejectWithValue }) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/patients/${id}`, {
+      const response = await apiFetch(`${API_BASE_URL}/patients/${id}`, {
         method: "DELETE",
       });
       if (!response.ok) throw new Error("Failed to delete patient");

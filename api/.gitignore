@@ -1,4 +1,5 @@
 node_modules/
+docs.txt
 .env
 .env.local
 .env.*.local

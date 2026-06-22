@@ -17,7 +17,7 @@ export class AppointmentsService {
   }
 
   static getAppointmentsSelect() {
-    return "id, doctor_id, patient_id, appointment_date, start_time, end_time, appointment_type, status, cancellation_reason, notes, patients(id, last_name, first_name, middle_name)";
+    return "id, doctor_id, patient_id, appointment_date, start_time, end_time, appointment_type, status, cancellation_reason, notes, patients(id, last_name, first_name, middle_name), doctors(id, last_name, first_name, middle_name)";
   }
 
   static parseIsoDate(isoDate) {
@@ -167,5 +167,15 @@ export class AppointmentsService {
     }
 
     return updatedAppointment;
+  }
+
+  static async deleteAppointment(id) {
+    const { error } = await supabase.from(APPOINTMENTS_TABLE).delete().eq("id", id);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return true;
   }
 }

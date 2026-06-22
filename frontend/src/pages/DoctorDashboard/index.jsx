@@ -14,10 +14,33 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Chip from "@mui/material/Chip";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import { fetchDoctors } from "../redux/slices/doctors";
-import { showErrorToast } from "../utils/toast";
+import { fetchDoctors } from "../../redux/slices/doctors";
+import { showErrorToast } from "../../utils/toast";
+import { apiFetch } from "../../utils/api";
+import { ROLE_IDS } from "../../constants/roles";
 
-const API_BASE_URL = "http://localhost:5000/api";
+import { API_BASE_URL } from "../../utils/config";
+import {
+  pageWrapperSx,
+  titleSx,
+  filtersRowSx,
+  dateControlsSx,
+  dateFieldSx,
+  doctorReadonlySx,
+  doctorReadonlyLabelSx,
+  doctorReadonlyNameSx,
+  doctorSelectControlSx,
+  loadingAppointmentsBoxSx,
+  freeSlotsPaperSx,
+  freeSlotsTitleSx,
+  workingHoursLoadingSx,
+  freeSlotsCountSx,
+  freeSlotsListSx,
+  appointmentsListSx,
+  appointmentCardSx,
+  appointmentTimeSx,
+  appointmentActionSx,
+} from "./styles";
 
 const getTodayIsoDate = () => {
   const now = new Date();
@@ -93,6 +116,8 @@ function DoctorDashboard() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { doctors } = useSelector((state) => state.doctors);
+  const currentUser = useSelector((state) => state.auth.user);
+  const isLoggedInDoctor = Number(currentUser?.role_id) === ROLE_IDS.DOCTOR;
 
   const [selectedDoctorId, setSelectedDoctorId] = useState("");
   const [selectedDate, setSelectedDate] = useState(getTodayIsoDate());
@@ -116,7 +141,7 @@ function DoctorDashboard() {
 
       setIsLoadingAppointments(true);
       try {
-        const response = await fetch(
+        const response = await apiFetch(
           `${API_BASE_URL}/appointments?doctor_id=${encodeURIComponent(selectedDoctorId)}&date=${encodeURIComponent(selectedDate)}`,
         );
 
@@ -158,7 +183,7 @@ function DoctorDashboard() {
 
       setIsLoadingWorkingHours(true);
       try {
-        const response = await fetch(`${API_BASE_URL}/working-hours/${selectedDoctorId}`);
+        const response = await apiFetch(`${API_BASE_URL}/working-hours/${selectedDoctorId}`);
         if (!response.ok) {
           throw new Error("Не вдалося завантажити робочі години");
         }
@@ -205,6 +230,18 @@ function DoctorDashboard() {
     [doctors],
   );
 
+  const currentUserDoctor = useMemo(
+    () =>
+      sortedDoctors.find((doctor) => String(doctor.user_id) === String(currentUser?.id)) || null,
+    [sortedDoctors, currentUser?.id],
+  );
+
+  useEffect(() => {
+    if (currentUserDoctor) {
+      setSelectedDoctorId(String(currentUserDoctor.id));
+    }
+  }, [currentUserDoctor]);
+
   const selectedDoctor = useMemo(
     () => sortedDoctors.find((doctor) => String(doctor.id) === String(selectedDoctorId)) || null,
     [sortedDoctors, selectedDoctorId],
@@ -231,7 +268,7 @@ function DoctorDashboard() {
       const slotEnd = timeToMinutes(slot.end);
 
       return !appointments.some((appointment) => {
-        if (appointment.status === "Cancelled") return false;
+        if (appointment.status === "Скасовано" || appointment.status === "Cancelled") return false;
 
         const appointmentStart = timeToMinutes(formatTime(appointment.start_time));
         const appointmentEnd = timeToMinutes(formatTime(appointment.end_time));
@@ -247,21 +284,13 @@ function DoctorDashboard() {
   };
 
   return (
-    <Box>
-      <Typography variant="h6" sx={{ marginBottom: 2 }}>
+    <Box sx={pageWrapperSx}>
+      <Typography variant="h6" sx={titleSx}>
         Розклад лікаря
       </Typography>
 
-      <Box
-        sx={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: 2,
-          alignItems: "center",
-          marginBottom: 3,
-        }}
-      >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+      <Box sx={filtersRowSx}>
+        <Box sx={dateControlsSx}>
           <IconButton
             aria-label="Попередній день"
             onClick={() => setSelectedDate((prev) => shiftIsoDate(prev, -1))}
@@ -276,7 +305,7 @@ function DoctorDashboard() {
             onChange={(e) => setSelectedDate(e.target.value)}
             size="small"
             InputLabelProps={{ shrink: true }}
-            sx={{ width: 170 }}
+            sx={dateFieldSx}
           />
           <IconButton
             aria-label="Наступний день"
@@ -287,25 +316,36 @@ function DoctorDashboard() {
           </IconButton>
         </Box>
 
-        <FormControl size="small" sx={{ minWidth: 320, flex: "1 1 320px" }}>
-          <Select
-            displayEmpty
-            value={selectedDoctorId}
-            onChange={(e) => setSelectedDoctorId(e.target.value)}
-            renderValue={(value) => {
-              if (!value) return "Оберіть лікаря для перегляду...";
-              const doctor = sortedDoctors.find((item) => String(item.id) === String(value));
-              return doctor ? getDoctorFullName(doctor) : "Оберіть лікаря для перегляду...";
-            }}
-          >
-            <MenuItem value="">Оберіть лікаря для перегляду...</MenuItem>
-            {sortedDoctors.map((doctor) => (
-              <MenuItem key={doctor.id} value={doctor.id}>
-                {getDoctorFullName(doctor)}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        {isLoggedInDoctor ? (
+          <Box sx={doctorReadonlySx}>
+            <Typography variant="caption" color="text.secondary" sx={doctorReadonlyLabelSx}>
+              Лікар
+            </Typography>
+            <Typography variant="body2" sx={doctorReadonlyNameSx}>
+              {getDoctorFullName(currentUserDoctor) || currentUser?.username || "-"}
+            </Typography>
+          </Box>
+        ) : (
+          <FormControl size="small" sx={doctorSelectControlSx}>
+            <Select
+              displayEmpty
+              value={selectedDoctorId}
+              onChange={(e) => setSelectedDoctorId(e.target.value)}
+              renderValue={(value) => {
+                if (!value) return "Оберіть лікаря для перегляду...";
+                const doctor = sortedDoctors.find((item) => String(item.id) === String(value));
+                return doctor ? getDoctorFullName(doctor) : "Оберіть лікаря для перегляду...";
+              }}
+            >
+              <MenuItem value="">Оберіть лікаря для перегляду...</MenuItem>
+              {sortedDoctors.map((doctor) => (
+                <MenuItem key={doctor.id} value={doctor.id}>
+                  {getDoctorFullName(doctor)}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        )}
       </Box>
 
       {!selectedDoctorId && (
@@ -315,19 +355,19 @@ function DoctorDashboard() {
       )}
 
       {selectedDoctorId && isLoadingAppointments && (
-        <Box sx={{ display: "flex", justifyContent: "center", py: 5 }}>
+        <Box sx={loadingAppointmentsBoxSx}>
           <CircularProgress size={28} />
         </Box>
       )}
 
       {selectedDoctorId && (
-        <Paper variant="outlined" elevation={0} sx={{ p: 2, mb: 2 }}>
-          <Typography variant="subtitle2" sx={{ mb: 1 }}>
+        <Paper variant="outlined" elevation={0} sx={freeSlotsPaperSx}>
+          <Typography variant="subtitle2" sx={freeSlotsTitleSx}>
             Вільні слоти
           </Typography>
 
           {isLoadingWorkingHours ? (
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Box sx={workingHoursLoadingSx}>
               <CircularProgress size={18} />
               <Typography variant="body2" color="text.secondary">
                 Завантаження робочих годин...
@@ -339,10 +379,10 @@ function DoctorDashboard() {
             </Typography>
           ) : (
             <>
-              <Typography variant="body2" sx={{ mb: 1.25 }}>
+              <Typography variant="body2" sx={freeSlotsCountSx}>
                 Доступно слотів: <strong>{freeSlots.length}</strong>
               </Typography>
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
+              <Box sx={freeSlotsListSx}>
                 {freeSlots.length ? (
                   freeSlots.map((slot) => (
                     <Chip
@@ -369,15 +409,10 @@ function DoctorDashboard() {
       )}
 
       {selectedDoctorId && !isLoadingAppointments && appointments.length > 0 && (
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+        <Box sx={appointmentsListSx}>
           {appointments.map((appointment) => (
-            <Paper
-              key={appointment.id}
-              variant="outlined"
-              elevation={0}
-              sx={{ p: 2, display: "flex", flexDirection: "column", gap: 1.25 }}
-            >
-              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+            <Paper key={appointment.id} variant="outlined" elevation={0} sx={appointmentCardSx}>
+              <Typography variant="subtitle1" sx={appointmentTimeSx}>
                 {formatTime(appointment.start_time)} - {formatTime(appointment.end_time)}
               </Typography>
 
@@ -386,14 +421,14 @@ function DoctorDashboard() {
               </Typography>
 
               <Typography variant="body2">
-                <strong>Статус:</strong> {appointment.status || "Scheduled"}
+                <strong>Статус:</strong> {appointment.status || "Заплановано"}
               </Typography>
 
               <Typography variant="body2">
                 <strong>Тип/Причина:</strong> {appointment.appointment_type || "-"}
               </Typography>
 
-              <Box sx={{ pt: 0.5 }}>
+              <Box sx={appointmentActionSx}>
                 <Button
                   variant="contained"
                   onClick={() => handleOpenPatientRecord(appointment)}

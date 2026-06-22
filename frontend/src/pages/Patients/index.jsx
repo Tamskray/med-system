@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { useNavigate } from "react-router";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import { useDispatch, useSelector } from "react-redux";
@@ -15,10 +16,14 @@ import {
   updatePatient,
   deletePatient,
 } from "../../redux/slices/patients";
+import { useAccess } from "../../hooks/useAccess";
+import { toolbarSx, searchInputSx } from "./styles";
 
 function Patients() {
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const { patients, isLoading } = useSelector((state) => state.patients);
+  const access = useAccess("patients");
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
@@ -90,35 +95,40 @@ function Patients() {
     setIsDeleteModalOpen(false);
   };
 
-  const columns = getPatientsColumns({ onEdit: openEditModal, onDelete: openDeleteModal });
+  const handleOpenProfile = (patient) => {
+    if (!patient?.id) return;
+    navigate(`/patients/${patient.id}`);
+  };
+
+  const columns = getPatientsColumns({
+    onEdit: openEditModal,
+    onDelete: openDeleteModal,
+    canUpdate: access.update,
+    canDelete: access.delete,
+  });
 
   return (
     <Box>
-      <Typography variant="h6" sx={{ marginBottom: 2 }}>
-        Пацієнти
-      </Typography>
-      <Box
-        sx={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: 2,
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 2,
-        }}
-      >
+      <Box sx={toolbarSx}>
         <SearchInput
           placeholder="Пошук за прізвищем, іменем або телефоном..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          sx={{ flex: 1, minWidth: 280, maxWidth: 520 }}
+          sx={searchInputSx}
         />
-        <Button variant="contained" onClick={openCreateModal} disabled={isLoading}>
-          Створити
-        </Button>
+        {access.create && (
+          <Button variant="contained" onClick={openCreateModal} disabled={isLoading}>
+            Додати
+          </Button>
+        )}
       </Box>
 
-      <Table data={filteredPatients} columns={columns} isLoading={isLoading} />
+      <Table
+        data={filteredPatients}
+        columns={columns}
+        isLoading={isLoading}
+        onRowClick={handleOpenProfile}
+      />
 
       {isFormModalOpen && (
         <PatientsForm

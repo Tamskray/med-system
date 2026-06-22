@@ -1,10 +1,11 @@
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import Box from "@mui/material/Box";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Checkbox from "@mui/material/Checkbox";
 import TextField from "@mui/material/TextField";
 import MenuItem from "@mui/material/MenuItem";
 import Typography from "@mui/material/Typography";
+import Tooltip from "../../../components/core/Tooltip";
 
 const DAYS_OF_WEEK = [
   { value: 0, label: "Понеділок" },
@@ -18,52 +19,111 @@ const DAYS_OF_WEEK = [
 
 const CLINIC_START_MINUTES = 8 * 60;
 const CLINIC_END_MINUTES = 20 * 60;
+const WORKING_HOURS_STEP_MINUTES = 15;
+
+const timeToMinutes = (value) => {
+  const [hours = 0, minutes = 0] = String(value || "00:00")
+    .slice(0, 5)
+    .split(":")
+    .map(Number);
+  return hours * 60 + minutes;
+};
+
+const minutesToTime = (total) => {
+  const hh = String(Math.floor(total / 60)).padStart(2, "0");
+  const mm = String(total % 60).padStart(2, "0");
+  return `${hh}:${mm}`;
+};
 
 function WorkingHours({ workingHours, onChange, slotDurationMinutes = 30 }) {
-  const stepMinutes = Number(slotDurationMinutes) > 0 ? Number(slotDurationMinutes) : 30;
+  const appointmentStepMinutes = Number(slotDurationMinutes) > 0 ? Number(slotDurationMinutes) : 30;
 
   const timeOptions = useMemo(() => {
     const options = [];
-    for (let total = CLINIC_START_MINUTES; total <= CLINIC_END_MINUTES; total += stepMinutes) {
-      const hh = String(Math.floor(total / 60)).padStart(2, "0");
-      const mm = String(total % 60).padStart(2, "0");
-      options.push(`${hh}:${mm}`);
+    for (
+      let total = CLINIC_START_MINUTES;
+      total <= CLINIC_END_MINUTES;
+      total += WORKING_HOURS_STEP_MINUTES
+    ) {
+      options.push(minutesToTime(total));
     }
     return options;
-  }, [stepMinutes]);
+  }, []);
 
-  const normalizeToStep = (value, mode = "floor") => {
-    const [hours = 0, minutes = 0] = String(value || "00:00")
-      .slice(0, 5)
-      .split(":")
-      .map(Number);
-    const total = hours * 60 + minutes;
+  const startOptions = useMemo(
+    () =>
+      timeOptions.filter(
+        (option) => timeToMinutes(option) <= CLINIC_END_MINUTES - appointmentStepMinutes,
+      ),
+    [timeOptions, appointmentStepMinutes],
+  );
+
+  const normalizeToStep = useCallback((value, mode = "floor") => {
+    const total = timeToMinutes(value);
+    const relative = total - CLINIC_START_MINUTES;
     const stepped =
-      mode === "ceil" ? Math.ceil(total / stepMinutes) : Math.floor(total / stepMinutes);
+      mode === "ceil"
+        ? Math.ceil(relative / WORKING_HOURS_STEP_MINUTES)
+        : Math.floor(relative / WORKING_HOURS_STEP_MINUTES);
     const normalized = Math.min(
       CLINIC_END_MINUTES,
-      Math.max(CLINIC_START_MINUTES, stepped * stepMinutes),
+      Math.max(CLINIC_START_MINUTES, CLINIC_START_MINUTES + stepped * WORKING_HOURS_STEP_MINUTES),
     );
-    const hh = String(Math.floor(normalized / 60)).padStart(2, "0");
-    const mm = String(normalized % 60).padStart(2, "0");
-    return `${hh}:${mm}`;
-  };
+    return minutesToTime(normalized);
+  }, []);
+
+  const getValidEndOptions = useCallback(
+    (startValue) => {
+      if (!startValue) return [];
+
+      const startMinutes = timeToMinutes(startValue);
+      const options = [];
+
+      for (
+        let endMinutes = startMinutes + appointmentStepMinutes;
+        endMinutes <= CLINIC_END_MINUTES;
+        endMinutes += appointmentStepMinutes
+      ) {
+        options.push(minutesToTime(endMinutes));
+      }
+
+      return options;
+    },
+    [appointmentStepMinutes],
+  );
 
   useEffect(() => {
     const normalized = (workingHours || []).map((wh) => {
-      const start = normalizeToStep(wh.start_time, "floor");
-      let end = normalizeToStep(wh.end_time, "ceil");
-      if (end <= start) {
-        const [h, m] = start.split(":").map(Number);
-        const next = h * 60 + m + stepMinutes;
-        const hh = String(Math.min(23, Math.floor(next / 60))).padStart(2, "0");
-        const mm = String(next % 60).padStart(2, "0");
-        end = `${hh}:${mm}`;
+      const rawStart = String(wh.start_time || "").slice(0, 5);
+      const rawEnd = String(wh.end_time || "").slice(0, 5);
+
+      if (!rawStart) {
+        return {
+          ...wh,
+          start_time: "",
+          end_time: "",
+        };
       }
+
+      let start = normalizeToStep(rawStart, "floor");
+      const maxStartMinutes = CLINIC_END_MINUTES - appointmentStepMinutes;
+      if (timeToMinutes(start) > maxStartMinutes) {
+        start = minutesToTime(maxStartMinutes);
+      }
+
+      const allowedEndOptions = getValidEndOptions(start);
+      const normalizedEndCandidate = rawEnd ? normalizeToStep(rawEnd, "ceil") : "";
+      const end =
+        allowedEndOptions.find(
+          (option) => timeToMinutes(option) >= timeToMinutes(normalizedEndCandidate),
+        ) ||
+        allowedEndOptions[0] ||
+        "";
+
       return {
         ...wh,
-        start_time: `${start}:00`,
-        end_time: `${end}:00`,
+        start_time: start ? `${start}:00` : "",
+        end_time: end ? `${end}:00` : "",
       };
     });
 
@@ -71,7 +131,7 @@ function WorkingHours({ workingHours, onChange, slotDurationMinutes = 30 }) {
     if (changed) {
       onChange(normalized);
     }
-  }, [workingHours, onChange, stepMinutes]);
+  }, [workingHours, onChange, appointmentStepMinutes, normalizeToStep, getValidEndOptions]);
 
   const workingHoursByDay = {};
   (workingHours || []).forEach((wh) => {
@@ -82,35 +142,46 @@ function WorkingHours({ workingHours, onChange, slotDurationMinutes = 30 }) {
     const isActive = workingHoursByDay[dayOfWeek];
 
     if (isActive) {
-      // Remove this day
       const updated = (workingHours || []).filter((wh) => wh.day_of_week !== dayOfWeek);
       onChange(updated);
-    } else {
-      // Add this day with default times
-      const updated = [
-        ...(workingHours || []),
-        {
-          day_of_week: dayOfWeek,
-          start_time: `${normalizeToStep("09:00")}:00`,
-          end_time: `${normalizeToStep("17:00", "ceil")}:00`,
-        },
-      ];
-      onChange(updated);
+      return;
     }
+
+    const updated = [
+      ...(workingHours || []),
+      {
+        day_of_week: dayOfWeek,
+        start_time: "",
+        end_time: "",
+      },
+    ];
+    onChange(updated);
   };
 
   const handleTimeChange = (dayOfWeek, field, value) => {
     const updated = (workingHours || []).map((wh) => {
-      if (wh.day_of_week === dayOfWeek) {
-        // Convert HH:mm to HH:mm:ss if needed
-        let timeValue = value;
-        if (value && !value.includes(":00", value.lastIndexOf(":"))) {
-          timeValue = `${value}:00`;
-        }
-        return { ...wh, [field]: timeValue };
+      if (wh.day_of_week !== dayOfWeek) return wh;
+
+      if (field === "start_time") {
+        const nextStart = value ? `${value}:00` : "";
+        const endOptions = getValidEndOptions(value);
+        const currentEnd = String(wh.end_time || "").slice(0, 5);
+        const nextEnd = endOptions.includes(currentEnd) ? currentEnd : endOptions[0] || "";
+
+        return {
+          ...wh,
+          start_time: nextStart,
+          end_time: nextEnd ? `${nextEnd}:00` : "",
+        };
       }
+
+      if (field === "end_time") {
+        return { ...wh, end_time: value ? `${value}:00` : "" };
+      }
+
       return wh;
     });
+
     onChange(updated);
   };
 
@@ -129,15 +200,22 @@ function WorkingHours({ workingHours, onChange, slotDurationMinutes = 30 }) {
         {DAYS_OF_WEEK.map((day) => {
           const dayHours = workingHoursByDay[day.value];
           const isActive = Boolean(dayHours);
-          const startTime = dayHours?.start_time ? dayHours.start_time.slice(0, 5) : "09:00";
-          const endTime = dayHours?.end_time ? dayHours.end_time.slice(0, 5) : "17:00";
+          const startTime = dayHours?.start_time ? dayHours.start_time.slice(0, 5) : "";
+          const endTime = dayHours?.end_time ? dayHours.end_time.slice(0, 5) : "";
+          const endOptions = getValidEndOptions(startTime);
+          const slotCount =
+            startTime && endTime
+              ? Math.floor(
+                  (timeToMinutes(endTime) - timeToMinutes(startTime)) / appointmentStepMinutes,
+                )
+              : 0;
 
           return (
             <Box
               key={day.value}
               sx={{
                 display: "grid",
-                gridTemplateColumns: "auto 1fr auto auto",
+                gridTemplateColumns: "auto 1fr auto auto auto",
                 alignItems: "center",
                 gap: 2,
                 p: 1.5,
@@ -170,26 +248,53 @@ function WorkingHours({ workingHours, onChange, slotDurationMinutes = 30 }) {
                     size="small"
                     sx={{ width: 120, "& .MuiInputBase-input": { fontSize: 14 } }}
                   >
-                    {timeOptions.map((option) => (
+                    <MenuItem value="">
+                      <em>Початок</em>
+                    </MenuItem>
+                    {startOptions.map((option) => (
                       <MenuItem key={`start-${day.value}-${option}`} value={option}>
                         {option}
                       </MenuItem>
                     ))}
                   </TextField>
+
                   <Typography sx={{ fontWeight: 500, fontSize: 14 }}>—</Typography>
-                  <TextField
-                    select
-                    value={endTime}
-                    onChange={(e) => handleTimeChange(day.value, "end_time", e.target.value)}
-                    size="small"
-                    sx={{ width: 120, "& .MuiInputBase-input": { fontSize: 14 } }}
-                  >
-                    {timeOptions.map((option) => (
-                      <MenuItem key={`end-${day.value}-${option}`} value={option}>
-                        {option}
-                      </MenuItem>
-                    ))}
-                  </TextField>
+
+                  {!startTime ? (
+                    <Tooltip title="Спочатку оберіть початок робочих годин">
+                      <Box component="span" sx={{ display: "inline-flex" }}>
+                        <TextField
+                          select
+                          value=""
+                          disabled
+                          size="small"
+                          sx={{ width: 120, "& .MuiInputBase-input": { fontSize: 14 } }}
+                        >
+                          <MenuItem value="">
+                            <em>Кінець</em>
+                          </MenuItem>
+                        </TextField>
+                      </Box>
+                    </Tooltip>
+                  ) : (
+                    <TextField
+                      select
+                      value={endTime}
+                      onChange={(e) => handleTimeChange(day.value, "end_time", e.target.value)}
+                      size="small"
+                      sx={{ width: 120, "& .MuiInputBase-input": { fontSize: 14 } }}
+                    >
+                      {endOptions.map((option) => (
+                        <MenuItem key={`end-${day.value}-${option}`} value={option}>
+                          {option}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  )}
+
+                  <Typography variant="caption" color="text.secondary" sx={{ minWidth: 88 }}>
+                    Слотів: {slotCount}
+                  </Typography>
                 </>
               )}
             </Box>

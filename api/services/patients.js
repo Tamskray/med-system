@@ -8,7 +8,7 @@ export class PatientsService {
   }
 
   static getPatientsSelect() {
-    return "id, last_name, first_name, middle_name, date_of_birth, phone, email, created_at";
+    return "id, last_name, first_name, middle_name, gender, date_of_birth, phone, email, created_at";
   }
 
   static async getAllPatients() {
