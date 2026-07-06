@@ -1,6 +1,7 @@
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import Typography from "@mui/material/Typography";
+
 import Tooltip from "../../components/core/Tooltip";
 
 export const getAppointmentHistoryColumns = ({

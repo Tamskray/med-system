@@ -1,4 +1,5 @@
 import Box from "@mui/material/Box";
+
 import { BREAK } from "../constants";
 
 export const getAppointmentPatientFullName = (appointment) => {

@@ -1,11 +1,12 @@
 import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
-import Drawer from "@mui/material/Drawer";
+import CircularProgress from "@mui/material/CircularProgress";
 import Divider from "@mui/material/Divider";
+import Drawer from "@mui/material/Drawer";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
-import CircularProgress from "@mui/material/CircularProgress";
+import Typography from "@mui/material/Typography";
+
 import { WEEK_DAYS } from "../constants";
 import {
   workingHoursDrawerPaperSx,

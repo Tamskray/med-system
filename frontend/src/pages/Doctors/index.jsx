@@ -1,20 +1,14 @@
 import { useState, useMemo, useEffect } from "react";
-import Typography from "@mui/material/Typography";
+import { useSearchParams } from "react-router";
+
 import Box from "@mui/material/Box";
 import FormControl from "@mui/material/FormControl";
-import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
-import { useSearchParams } from "react-router";
+import Select from "@mui/material/Select";
+import Typography from "@mui/material/Typography";
+
 import { useDispatch, useSelector } from "react-redux";
-import { showErrorToast } from "../../utils/toast";
-import Button from "../../components/core/Button";
-import Table from "../../components/core/Table";
-import SearchInput from "../../components/core/SearchInput";
-import DeleteConfirmModal from "../../components/core/DeleteConfirmModal";
-import { apiFetch } from "../../utils/api";
-import DoctorsForm from "./DoctorsForm";
-import TimeOffModal from "./TimeOffModal";
-import WorkingHoursDrawer from "./WorkingHoursDrawer";
+
 import { getDoctorsColumns } from "./columns.jsx";
 import {
   DOCTOR_FORM_MODES,
@@ -22,9 +16,7 @@ import {
   DOCTOR_DEPARTMENT_ALL_OPTION,
   WEEK_DAYS,
 } from "./constants";
-import { fetchDoctors, createDoctor, updateDoctor, deleteDoctor } from "../../redux/slices/doctors";
-import { useAccess } from "../../hooks/useAccess";
-import { API_BASE_URL } from "../../utils/config";
+import DoctorsForm from "./DoctorsForm";
 import {
   doctorsPageHeaderBoxSx,
   doctorsPageSearchInputSx,
@@ -32,6 +24,17 @@ import {
   doctorsPageDepartmentFormControlSx,
   doctorsPageStatusFormControlSx,
 } from "./styles";
+import TimeOffModal from "./TimeOffModal";
+import WorkingHoursDrawer from "./WorkingHoursDrawer";
+import Button from "../../components/core/Button";
+import DeleteConfirmModal from "../../components/core/DeleteConfirmModal";
+import SearchInput from "../../components/core/SearchInput";
+import Table from "../../components/core/Table";
+import { useAccess } from "../../hooks/useAccess";
+import { fetchDoctors, createDoctor, updateDoctor, deleteDoctor } from "../../redux/slices/doctors";
+import { apiFetch } from "../../utils/api";
+import { API_BASE_URL } from "../../utils/config";
+import { showErrorToast } from "../../utils/toast";
 const getDoctorFullName = (doctor) =>
   [doctor?.last_name, doctor?.first_name, doctor?.middle_name].filter(Boolean).join(" ") || "Лікар";
 function Doctors() {

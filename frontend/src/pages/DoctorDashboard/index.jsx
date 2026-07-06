@@ -1,25 +1,22 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
-import { useDispatch, useSelector } from "react-redux";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
-import TextField from "@mui/material/TextField";
-import IconButton from "@mui/material/IconButton";
-import FormControl from "@mui/material/FormControl";
-import Select from "@mui/material/Select";
-import MenuItem from "@mui/material/MenuItem";
-import Paper from "@mui/material/Paper";
-import Button from "@mui/material/Button";
-import CircularProgress from "@mui/material/CircularProgress";
-import Chip from "@mui/material/Chip";
+
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import { fetchDoctors } from "../../redux/slices/doctors";
-import { showErrorToast } from "../../utils/toast";
-import { apiFetch } from "../../utils/api";
-import { ROLE_IDS } from "../../constants/roles";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
+import CircularProgress from "@mui/material/CircularProgress";
+import FormControl from "@mui/material/FormControl";
+import IconButton from "@mui/material/IconButton";
+import MenuItem from "@mui/material/MenuItem";
+import Paper from "@mui/material/Paper";
+import Select from "@mui/material/Select";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
 
-import { API_BASE_URL } from "../../utils/config";
+import { useDispatch, useSelector } from "react-redux";
+
 import {
   pageWrapperSx,
   titleSx,
@@ -41,6 +38,11 @@ import {
   appointmentTimeSx,
   appointmentActionSx,
 } from "./styles";
+import { ROLE_IDS } from "../../constants/roles";
+import { fetchDoctors } from "../../redux/slices/doctors";
+import { apiFetch } from "../../utils/api";
+import { API_BASE_URL } from "../../utils/config";
+import { showErrorToast } from "../../utils/toast";
 
 const getTodayIsoDate = () => {
   const now = new Date();

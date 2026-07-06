@@ -1,12 +1,13 @@
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
+import EventBusyIcon from "@mui/icons-material/EventBusy";
 import Chip from "@mui/material/Chip";
 import IconButton from "@mui/material/IconButton";
 import Switch from "@mui/material/Switch";
-import AccessTimeIcon from "@mui/icons-material/AccessTime";
-import EventBusyIcon from "@mui/icons-material/EventBusy";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
-import Tooltip from "../../components/core/Tooltip";
+
 import { doctorActionIconButtonSx, doctorDeleteIconButtonSx } from "./styles";
+import Tooltip from "../../components/core/Tooltip";
 
 export const getDoctorsColumns = ({
   onOpenWorkingHours,

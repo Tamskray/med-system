@@ -1,7 +1,8 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import Modal from "../Modal";
+
 import { BUTTON_MODES } from "../Button";
+import Modal from "../Modal";
 
 function DeleteConfirmModal({
   open,

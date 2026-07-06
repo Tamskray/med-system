@@ -1,19 +1,20 @@
 import { useState, useEffect } from "react";
-import Box from "@mui/material/Box";
-import TextField from "@mui/material/TextField";
-import FormControl from "@mui/material/FormControl";
-import InputLabel from "@mui/material/InputLabel";
-import Select from "@mui/material/Select";
-import MenuItem from "@mui/material/MenuItem";
-import FormHelperText from "@mui/material/FormHelperText";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import Switch from "@mui/material/Switch";
-import Modal from "../../../components/core/Modal";
-import WorkingHours from "./WorkingHours";
-import { DOCTOR_FORM_MODES } from "../constants";
-import { apiFetch } from "../../../utils/api";
 
+import Box from "@mui/material/Box";
+import FormControl from "@mui/material/FormControl";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import FormHelperText from "@mui/material/FormHelperText";
+import InputLabel from "@mui/material/InputLabel";
+import MenuItem from "@mui/material/MenuItem";
+import Select from "@mui/material/Select";
+import Switch from "@mui/material/Switch";
+import TextField from "@mui/material/TextField";
+
+import WorkingHours from "./WorkingHours";
+import Modal from "../../../components/core/Modal";
+import { apiFetch } from "../../../utils/api";
 import { API_BASE_URL } from "../../../utils/config";
+import { DOCTOR_FORM_MODES } from "../constants";
 
 const defaultDoctorFormValues = {
   id: null,

@@ -1,39 +1,16 @@
 import { useMemo, useEffect, useState } from "react";
-import Box from "@mui/material/Box";
-import Paper from "@mui/material/Paper";
-import Typography from "@mui/material/Typography";
-import TextField from "@mui/material/TextField";
-import MenuItem from "@mui/material/MenuItem";
+
 import Autocomplete from "@mui/material/Autocomplete";
+import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
+import MenuItem from "@mui/material/MenuItem";
+import Paper from "@mui/material/Paper";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
+
 import { useDispatch, useSelector } from "react-redux";
-import { fetchDoctors } from "../../redux/slices/doctors";
-import { fetchPatients, createPatient } from "../../redux/slices/patients";
-import { useAccess } from "../../hooks/useAccess";
-import Tooltip from "../../components/core/Tooltip";
-import DeleteConfirmModal from "../../components/core/DeleteConfirmModal";
+
 import AppointmentForm from "./AppointmentForm";
-import ScheduleFilters from "./Filters";
-import { showErrorToast } from "../../utils/toast";
-import { getTodayIsoDate, shiftIsoDate, timeToMinutes, minutesToTime } from "../../utils/dates";
-import {
-  getAppointmentPatientFullName,
-  getSlotPalette,
-  getSlotTooltipContent,
-  getTimeOffLabel,
-} from "./utils/schedule";
-import {
-  deleteScheduleAppointment,
-  fetchScheduleAppointments,
-  fetchScheduleTimeOffs,
-  fetchScheduleWorkingHours,
-  receiveStreamAppointment,
-  receiveStreamTimeOff,
-  saveScheduleAppointment,
-  updateStreamAppointmentStatus,
-} from "../../redux/slices/schedule";
-import PatientsForm from "../Patients/PatientsForm";
-import { PATIENT_FORM_MODES } from "../Patients/constants";
 import {
   DAY_START,
   DAY_END,
@@ -44,6 +21,7 @@ import {
   BREAK,
   DEFAULT_BOOKING_FORM_VALUES,
 } from "./constants";
+import ScheduleFilters from "./Filters";
 import {
   pageWrapperSx,
   timeTitleSx,
@@ -68,6 +46,31 @@ import {
   slotPatientNameSx,
   emptyStateBoxSx,
 } from "./styles";
+import {
+  getAppointmentPatientFullName,
+  getSlotPalette,
+  getSlotTooltipContent,
+  getTimeOffLabel,
+} from "./utils/schedule";
+import DeleteConfirmModal from "../../components/core/DeleteConfirmModal";
+import Tooltip from "../../components/core/Tooltip";
+import { useAccess } from "../../hooks/useAccess";
+import { fetchDoctors } from "../../redux/slices/doctors";
+import { fetchPatients, createPatient } from "../../redux/slices/patients";
+import {
+  deleteScheduleAppointment,
+  fetchScheduleAppointments,
+  fetchScheduleTimeOffs,
+  fetchScheduleWorkingHours,
+  receiveStreamAppointment,
+  receiveStreamTimeOff,
+  saveScheduleAppointment,
+  updateStreamAppointmentStatus,
+} from "../../redux/slices/schedule";
+import { getTodayIsoDate, shiftIsoDate, timeToMinutes, minutesToTime } from "../../utils/dates";
+import { showErrorToast } from "../../utils/toast";
+import { PATIENT_FORM_MODES } from "../Patients/constants";
+import PatientsForm from "../Patients/PatientsForm";
 
 const getTimeAxis = (startTime, endTime, stepMinutes = AXIS_STEP_MINUTES) => {
   const start = timeToMinutes(startTime);

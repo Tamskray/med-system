@@ -1,33 +1,26 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchDoctors } from "../../redux/slices/doctors";
-import {
-  fetchPatientProfileData,
-  updateAppointmentStatus,
-  createMedicalRecord,
-  clearPatientProfile,
-} from "../../redux/slices/patientProfile";
+
 import Box from "@mui/material/Box";
-import Paper from "@mui/material/Paper";
-import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
-import ToggleButton from "@mui/material/ToggleButton";
-import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
-import Tabs from "@mui/material/Tabs";
-import Tab from "@mui/material/Tab";
-import Grid from "@mui/material/Grid";
-import TextField from "@mui/material/TextField";
-import MenuItem from "@mui/material/MenuItem";
 import CardContent from "@mui/material/CardContent";
+import Chip from "@mui/material/Chip";
 import CircularProgress from "@mui/material/CircularProgress";
 import Divider from "@mui/material/Divider";
-import Chip from "@mui/material/Chip";
-import Table from "../../components/core/Table";
-import { showErrorToast } from "../../utils/toast";
-import { ROLE_IDS } from "../../constants/roles";
-import { APPOINTMENT_STATUS_OPTIONS, ROLE_DOCTOR, ROLE_RECEPTIONIST } from "./constants";
+import Grid from "@mui/material/Grid";
+import MenuItem from "@mui/material/MenuItem";
+import Paper from "@mui/material/Paper";
+import Tab from "@mui/material/Tab";
+import Tabs from "@mui/material/Tabs";
+import TextField from "@mui/material/TextField";
+import ToggleButton from "@mui/material/ToggleButton";
+import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
+import Typography from "@mui/material/Typography";
+
+import { useDispatch, useSelector } from "react-redux";
+
 import { getAppointmentHistoryColumns } from "./columns";
+import { APPOINTMENT_STATUS_OPTIONS, ROLE_DOCTOR, ROLE_RECEPTIONIST } from "./constants";
 import {
   pageWrapperSx,
   topSectionPaperSx,
@@ -54,6 +47,16 @@ import {
   doctorLinkButtonSx,
   getStatusChipStyles,
 } from "./styles";
+import Table from "../../components/core/Table";
+import { ROLE_IDS } from "../../constants/roles";
+import { fetchDoctors } from "../../redux/slices/doctors";
+import {
+  fetchPatientProfileData,
+  updateAppointmentStatus,
+  createMedicalRecord,
+  clearPatientProfile,
+} from "../../redux/slices/patientProfile";
+import { showErrorToast } from "../../utils/toast";
 
 const formatDate = (value) => {
   if (!value) return "-";

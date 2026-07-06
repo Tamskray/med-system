@@ -1,14 +1,15 @@
 import { useState } from "react";
-import TextField from "@mui/material/TextField";
-import InputAdornment from "@mui/material/InputAdornment";
-import CircularProgress from "@mui/material/CircularProgress";
-import { Box, Typography, Button, Divider } from "@mui/material";
-import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
-import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import LocalHospitalIcon from "@mui/icons-material/LocalHospital";
-import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router";
-import { login } from "../../redux/slices/auth";
+
+import LocalHospitalIcon from "@mui/icons-material/LocalHospital";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
+import { Box, Typography, Button, Divider } from "@mui/material";
+import CircularProgress from "@mui/material/CircularProgress";
+import InputAdornment from "@mui/material/InputAdornment";
+import TextField from "@mui/material/TextField";
+
+import { useDispatch, useSelector } from "react-redux";
 
 import {
   loginPageSx,
@@ -19,6 +20,7 @@ import {
   autofillSx,
   submitButtonSx,
 } from "./styles";
+import { login } from "../../redux/slices/auth";
 
 function Login() {
   const [name, setName] = useState("");

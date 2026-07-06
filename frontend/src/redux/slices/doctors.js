@@ -1,8 +1,8 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { showErrorToast, showSuccessToast } from "../../utils/toast";
-import { apiFetch } from "../../utils/api";
 
+import { apiFetch } from "../../utils/api";
 import { API_BASE_URL } from "../../utils/config";
+import { showErrorToast, showSuccessToast } from "../../utils/toast";
 
 const pickDoctorPayload = (doctor = {}) => ({
   last_name: doctor.last_name,

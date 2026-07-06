@@ -1,16 +1,19 @@
-import Box from "@mui/material/Box";
-import IconButton from "@mui/material/IconButton";
-import Chip from "@mui/material/Chip";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import ScheduleIcon from "@mui/icons-material/Schedule";
-import PeopleIcon from "@mui/icons-material/People";
-import LocalHospitalIcon from "@mui/icons-material/LocalHospital";
-import EventNoteIcon from "@mui/icons-material/EventNote";
-import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
 import { Link as RouterLink } from "react-router";
 import { useLocation } from "react-router";
+
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import EventNoteIcon from "@mui/icons-material/EventNote";
+import LocalHospitalIcon from "@mui/icons-material/LocalHospital";
+import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
+import PeopleIcon from "@mui/icons-material/People";
+import ScheduleIcon from "@mui/icons-material/Schedule";
+import Box from "@mui/material/Box";
+import Chip from "@mui/material/Chip";
+import IconButton from "@mui/material/IconButton";
+
 import { useDispatch, useSelector } from "react-redux";
+
 import { toggleDevMode } from "../../../redux/slices/devMode";
 
 export default function Sidebar({ open, toggleSidebar }) {

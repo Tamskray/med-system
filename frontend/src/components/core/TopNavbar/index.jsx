@@ -1,5 +1,6 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+
 import Button, { BUTTON_MODES } from "../Button";
 
 export default function TopNavbar({ pageName, user, onLogout }) {

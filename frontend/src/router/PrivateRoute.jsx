@@ -1,4 +1,5 @@
 import { Navigate, Outlet } from "react-router";
+
 import NoAccess from "../components/core/NoAccess";
 
 const PrivateRoute = ({ isAllowed, redirectPath = "/", module, permissions, children }) => {

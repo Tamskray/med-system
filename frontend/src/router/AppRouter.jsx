@@ -1,9 +1,8 @@
-import { Routes, Route } from "react-router";
 import { Suspense } from "react";
+import { Routes, Route } from "react-router";
 
 import PrivateRoute from "./PrivateRoute";
 import PublicRoute from "./PublicRoute";
-
 import { routes } from "./routes";
 import Loading from "../components/core/Loading";
 

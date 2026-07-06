@@ -1,12 +1,16 @@
 import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router";
+
+import { createRoot } from "react-dom/client";
+
 import { Provider } from "react-redux";
+
 import "./index.css";
 import App from "./App.jsx";
-import { ThemeProvider } from "@mui/material/styles";
-import { theme } from "./theme/index.js";
 import { store } from "./redux/index.js";
+import { theme } from "./theme/index.js";
+
+import { ThemeProvider } from "@mui/material/styles";
 
 createRoot(document.getElementById("root")).render(
   // <StrictMode>

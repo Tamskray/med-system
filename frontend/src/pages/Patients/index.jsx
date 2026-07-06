@@ -1,23 +1,26 @@
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router";
-import Typography from "@mui/material/Typography";
+
 import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+
 import { useDispatch, useSelector } from "react-redux";
-import Button from "../../components/core/Button";
-import Table from "../../components/core/Table";
-import SearchInput from "../../components/core/SearchInput";
-import DeleteConfirmModal from "../../components/core/DeleteConfirmModal";
-import PatientsForm from "./PatientsForm";
+
 import { getPatientsColumns } from "./columns.jsx";
 import { PATIENT_FORM_MODES } from "./constants";
+import PatientsForm from "./PatientsForm";
+import { toolbarSx, searchInputSx } from "./styles";
+import Button from "../../components/core/Button";
+import DeleteConfirmModal from "../../components/core/DeleteConfirmModal";
+import SearchInput from "../../components/core/SearchInput";
+import Table from "../../components/core/Table";
+import { useAccess } from "../../hooks/useAccess";
 import {
   fetchPatients,
   createPatient,
   updatePatient,
   deletePatient,
 } from "../../redux/slices/patients";
-import { useAccess } from "../../hooks/useAccess";
-import { toolbarSx, searchInputSx } from "./styles";
 
 function Patients() {
   const navigate = useNavigate();

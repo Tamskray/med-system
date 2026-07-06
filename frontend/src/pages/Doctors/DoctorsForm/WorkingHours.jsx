@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo } from "react";
+
 import Box from "@mui/material/Box";
-import FormControlLabel from "@mui/material/FormControlLabel";
 import Checkbox from "@mui/material/Checkbox";
-import TextField from "@mui/material/TextField";
+import FormControlLabel from "@mui/material/FormControlLabel";
 import MenuItem from "@mui/material/MenuItem";
+import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+
 import Tooltip from "../../../components/core/Tooltip";
 
 const DAYS_OF_WEEK = [
