@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 
 import { useAccess } from "../../hooks/useAccess";
 import { useConfirmModal } from "../../hooks/useConfirmModal";
+import { useDebounce } from "../../hooks/useDebounce";
 
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -23,6 +24,8 @@ export const usePatients = () => {
   const { patients, isLoading } = useSelector((state) => state.patients);
 
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 300);
+
   const [selectedPatient, setSelectedPatient] = useState(null);
 
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
@@ -37,17 +40,17 @@ export const usePatients = () => {
 
   const filteredPatients = useMemo(() => {
     if (!patients) return [];
-    if (!search.trim()) return patients;
+    if (!debouncedSearch.trim()) return patients;
 
     return patients.filter((patient) => {
-      const searchTerm = search.toLowerCase();
+      const searchTerm = debouncedSearch.toLowerCase();
       return (
         patient.last_name?.toLowerCase().includes(searchTerm) ||
         patient.first_name?.toLowerCase().includes(searchTerm) ||
         patient.phone?.toLowerCase().includes(searchTerm)
       );
     });
-  }, [search, patients]);
+  }, [debouncedSearch, patients]);
 
   const openCreateModal = () => {
     setFormMode(PATIENT_FORM_MODES.CREATE);
