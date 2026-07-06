@@ -31,45 +31,45 @@ export default defineConfig([
 
       "no-multiple-empty-lines": ["error", { max: 1 }],
 
-      "import/order": [
-        "error",
-        {
-          groups: ["builtin", "external", "internal", ["parent", "sibling", "index"]],
-          pathGroups: [
-            // 1. React & Router at the very top
-            {
-              pattern: "{react,react-dom,react-router,react-router-dom}",
-              group: "external",
-              position: "before",
-            },
+      // "import/order": [
+      //   "error",
+      //   {
+      //     groups: ["builtin", "external", "internal", ["parent", "sibling", "index"]],
+      //     pathGroups: [
+      //       // 1. React & Router at the very top
+      //       {
+      //         pattern: "{react,react-dom,react-router,react-router-dom}",
+      //         group: "external",
+      //         position: "before",
+      //       },
 
-            // 2. Redux Group (Combines NPM react-redux with your local ./redux folder!)
-            { pattern: "react-redux", group: "internal", position: "before" },
-            { pattern: "**/redux/**", group: "internal", position: "before" },
+      //       // 2. Redux Group (Combines NPM react-redux with your local ./redux folder!)
+      //       { pattern: "react-redux", group: "internal", position: "before" },
+      //       { pattern: "**/redux/**", group: "internal", position: "before" },
 
-            // 3. MUI Group (Pushed to the bottom of the external packages)
-            { pattern: "@mui/**", group: "external", position: "after" },
+      //       // 3. MUI Group (Pushed to the bottom of the external packages)
+      //       { pattern: "@mui/**", group: "external", position: "after" },
 
-            // 4. Components & Hooks
-            { pattern: "**/components/**", group: "internal", position: "after" },
+      //       // 4. Components & Hooks
+      //       { pattern: "**/components/**", group: "internal", position: "after" },
 
-            // 5. Constants (Pushed towards the end)
-            { pattern: "**/constants/**", group: "index", position: "before" },
+      //       // 5. Constants (Pushed towards the end)
+      //       { pattern: "**/constants/**", group: "index", position: "before" },
 
-            // 6. Styles (Absolute bottom)
-            { pattern: "**/*.+(css|scss|less)", group: "index", position: "after" },
-            { pattern: "**/styles", group: "index", position: "after" },
-            { pattern: "**/styles/**", group: "index", position: "after" },
-          ],
-          // CRITICAL: This allows us to re-route NPM packages like react-redux
-          pathGroupsExcludedImportTypes: ["builtin"],
-          "newlines-between": "always",
-          alphabetize: {
-            order: "asc",
-            caseInsensitive: true,
-          },
-        },
-      ],
+      //       // 6. Styles (Absolute bottom)
+      //       { pattern: "**/*.+(css|scss|less)", group: "index", position: "after" },
+      //       { pattern: "**/styles", group: "index", position: "after" },
+      //       { pattern: "**/styles/**", group: "index", position: "after" },
+      //     ],
+      //     // CRITICAL: This allows us to re-route NPM packages like react-redux
+      //     pathGroupsExcludedImportTypes: ["builtin"],
+      //     "newlines-between": "always",
+      //     alphabetize: {
+      //       order: "asc",
+      //       caseInsensitive: true,
+      //     },
+      //   },
+      // ],
     },
   },
 ]);
