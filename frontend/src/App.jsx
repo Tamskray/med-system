@@ -1,18 +1,19 @@
+import AppRouter from "./router/AppRouter";
 import { useLocation } from "react-router";
-
 import { Toaster } from "react-hot-toast";
 
-import Box from "@mui/material/Box";
-
 import { useDispatch, useSelector } from "react-redux";
-
-import Sidebar from "./components/core/Sidebar";
-import { useSidebar } from "./components/core/Sidebar/hooks";
-import TopNavbar from "./components/core/TopNavbar";
-import { pageNames, PAGE_PATHS } from "./constants/pageNames";
 import { userSelector } from "./redux/selectors/authSelector";
 import { logout } from "./redux/slices/auth";
-import AppRouter from "./router/AppRouter";
+
+import { usePageMeta } from "./hooks/usePageMeta";
+import { useSidebar } from "./components/core/Sidebar/hooks";
+
+import Box from "@mui/material/Box";
+import Sidebar from "./components/core/Sidebar";
+import TopNavbar from "./components/core/TopNavbar";
+
+import { pageNames, PAGE_PATHS } from "./constants/pageNames";
 
 import "./App.css";
 import {
@@ -27,12 +28,7 @@ function App() {
   const dispatch = useDispatch();
   const user = useSelector(userSelector);
   const { open, toggleSidebar } = useSidebar();
-
-  const location = useLocation();
-  const isSchedulePage = location.pathname === PAGE_PATHS.SCHEDULE;
-  const pageName =
-    pageNames[location.pathname] ||
-    (location.pathname.startsWith(PAGE_PATHS.PATIENTS + "/") ? "Профіль пацієнта" : "");
+  const { pageName, isSchedulePage } = usePageMeta();
 
   const handleLogout = () => {
     dispatch(logout());
