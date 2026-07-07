@@ -48,7 +48,7 @@ function PatientsForm({ open, mode, initialValues, isLoading, onClose, onSubmit 
         />
 
         <Controller
-          name="first_name2"
+          name="first_name"
           control={control}
           render={({ field }) => (
             <TextField
