@@ -26,6 +26,9 @@ export default defineConfig([
         sourceType: "module",
       },
     },
+    env: {
+      jest: true,
+    },
     rules: {
       "no-unused-vars": ["error", { varsIgnorePattern: "^[A-Z_]" }],
 
