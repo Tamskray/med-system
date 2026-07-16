@@ -1,12 +1,17 @@
+// Mock modules BEFORE any imports to prevent initialization errors
+jest.mock("../supabase.js", () => ({
+  supabase: {
+    from: jest.fn(),
+  },
+}));
+jest.mock("../services/doctors.js");
+jest.mock("../services/sseService.js");
+jest.mock("../utils/logger.js");
+
 import { DoctorsController } from "./doctors.js";
 import * as DoctorsServiceModule from "../services/doctors.js";
 import * as sseServiceModule from "../services/sseService.js";
 import * as loggerModule from "../utils/logger.js";
-
-// Mock the dependencies
-jest.mock("../services/doctors.js");
-jest.mock("../services/sseService.js");
-jest.mock("../utils/logger.js");
 
 describe("DoctorsController", () => {
   let mockReq;
