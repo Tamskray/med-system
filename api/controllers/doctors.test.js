@@ -46,8 +46,12 @@ describe("DoctorsController", () => {
     };
 
     // Setup error classes mock
-    DoctorsServiceModule.DoctorTimeOffValidationError = class DoctorTimeOffValidationError extends Error {};
-    DoctorsServiceModule.DoctorTimeOffConflictError = class DoctorTimeOffConflictError extends Error {
+    DoctorsServiceModule.DoctorTimeOffValidationError = class DoctorTimeOffValidationError extends (
+      Error
+    ) {};
+    DoctorsServiceModule.DoctorTimeOffConflictError = class DoctorTimeOffConflictError extends (
+      Error
+    ) {
       constructor(message, count, appointments) {
         super(message);
         this.count = count;
@@ -191,9 +195,7 @@ describe("DoctorsController", () => {
 
       await DoctorsController.createDoctor(mockReq, mockRes);
 
-      expect(DoctorsServiceModule.DoctorsService.createDoctor).toHaveBeenCalledWith(
-        newDoctorData,
-      );
+      expect(DoctorsServiceModule.DoctorsService.createDoctor).toHaveBeenCalledWith(newDoctorData);
       expect(mockRes.status).toHaveBeenCalledWith(201);
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
@@ -275,10 +277,7 @@ describe("DoctorsController", () => {
 
       await DoctorsController.updateDoctor(mockReq, mockRes);
 
-      expect(DoctorsServiceModule.DoctorsService.updateDoctor).toHaveBeenCalledWith(
-        1,
-        updateData,
-      );
+      expect(DoctorsServiceModule.DoctorsService.updateDoctor).toHaveBeenCalledWith(1, updateData);
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
         data: updatedDoctor,
@@ -401,12 +400,9 @@ describe("DoctorsController", () => {
         success: false,
         message: "Doctor not found",
       });
-      expect(loggerModule.default.warn).toHaveBeenCalledWith(
-        "Doctor not found for deletion",
-        {
-          id: "999",
-        },
-      );
+      expect(loggerModule.default.warn).toHaveBeenCalledWith("Doctor not found for deletion", {
+        id: "999",
+      });
     });
 
     it("should handle error when deleting doctor", async () => {
@@ -438,15 +434,15 @@ describe("DoctorsController", () => {
 
       mockReq.params = { id: "1" };
       mockReq.query = { start_date: "2024-08-01", end_date: "2024-08-15" };
-      DoctorsServiceModule.DoctorsService.getDoctorTimeOffConflicts.mockResolvedValue(
-        mockResult,
-      );
+      DoctorsServiceModule.DoctorsService.getDoctorTimeOffConflicts.mockResolvedValue(mockResult);
 
       await DoctorsController.getDoctorTimeOffConflicts(mockReq, mockRes);
 
-      expect(
-        DoctorsServiceModule.DoctorsService.getDoctorTimeOffConflicts,
-      ).toHaveBeenCalledWith(1, "2024-08-01", "2024-08-15");
+      expect(DoctorsServiceModule.DoctorsService.getDoctorTimeOffConflicts).toHaveBeenCalledWith(
+        1,
+        "2024-08-01",
+        "2024-08-15",
+      );
       expect(mockRes.status).toHaveBeenCalledWith(200);
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
@@ -455,26 +451,19 @@ describe("DoctorsController", () => {
           appointments: mockResult.appointments,
         },
       });
-      expect(loggerModule.default.info).toHaveBeenCalledWith(
-        "Fetched doctor time-off conflicts",
-        {
-          doctor_id: 1,
-          start_date: "2024-08-01",
-          end_date: "2024-08-15",
-          count: 2,
-        },
-      );
+      expect(loggerModule.default.info).toHaveBeenCalledWith("Fetched doctor time-off conflicts", {
+        doctor_id: 1,
+        start_date: "2024-08-01",
+        end_date: "2024-08-15",
+        count: 2,
+      });
     });
 
     it("should return 400 for validation error", async () => {
-      const error = new DoctorsServiceModule.DoctorTimeOffValidationError(
-        "Invalid date format",
-      );
+      const error = new DoctorsServiceModule.DoctorTimeOffValidationError("Invalid date format");
       mockReq.params = { id: "1" };
       mockReq.query = { start_date: "invalid", end_date: "invalid" };
-      DoctorsServiceModule.DoctorsService.getDoctorTimeOffConflicts.mockRejectedValue(
-        error,
-      );
+      DoctorsServiceModule.DoctorsService.getDoctorTimeOffConflicts.mockRejectedValue(error);
 
       await DoctorsController.getDoctorTimeOffConflicts(mockReq, mockRes);
 
@@ -489,9 +478,7 @@ describe("DoctorsController", () => {
       const error = new Error("Database error");
       mockReq.params = { id: "1" };
       mockReq.query = { start_date: "2024-08-01", end_date: "2024-08-15" };
-      DoctorsServiceModule.DoctorsService.getDoctorTimeOffConflicts.mockRejectedValue(
-        error,
-      );
+      DoctorsServiceModule.DoctorsService.getDoctorTimeOffConflicts.mockRejectedValue(error);
 
       await DoctorsController.getDoctorTimeOffConflicts(mockReq, mockRes);
 
@@ -523,16 +510,14 @@ describe("DoctorsController", () => {
         success: true,
         data: mockTimeOffs,
       });
-      expect(loggerModule.default.info).toHaveBeenCalledWith(
-        "Fetched doctor time offs",
-        { date: "2024-08-01", count: 2 },
-      );
+      expect(loggerModule.default.info).toHaveBeenCalledWith("Fetched doctor time offs", {
+        date: "2024-08-01",
+        count: 2,
+      });
     });
 
     it("should return 400 for validation error", async () => {
-      const error = new DoctorsServiceModule.DoctorTimeOffValidationError(
-        "Invalid date format",
-      );
+      const error = new DoctorsServiceModule.DoctorTimeOffValidationError("Invalid date format");
       mockReq.query = { date: "invalid" };
       DoctorsServiceModule.DoctorsService.getTimeOffs.mockRejectedValue(error);
 
@@ -576,15 +561,11 @@ describe("DoctorsController", () => {
 
       mockReq.params = { id: "1" };
       mockReq.body = timeOffData;
-      DoctorsServiceModule.DoctorsService.createDoctorTimeOff.mockResolvedValue(
-        createdTimeOff,
-      );
+      DoctorsServiceModule.DoctorsService.createDoctorTimeOff.mockResolvedValue(createdTimeOff);
 
       await DoctorsController.createDoctorTimeOff(mockReq, mockRes);
 
-      expect(
-        DoctorsServiceModule.DoctorsService.createDoctorTimeOff,
-      ).toHaveBeenCalledWith({
+      expect(DoctorsServiceModule.DoctorsService.createDoctorTimeOff).toHaveBeenCalledWith({
         doctorId: 1,
         startDate: "2024-08-01",
         endDate: "2024-08-05",
@@ -606,9 +587,7 @@ describe("DoctorsController", () => {
     });
 
     it("should return 400 for validation error", async () => {
-      const error = new DoctorsServiceModule.DoctorTimeOffValidationError(
-        "Invalid date range",
-      );
+      const error = new DoctorsServiceModule.DoctorTimeOffValidationError("Invalid date range");
       mockReq.params = { id: "1" };
       mockReq.body = {
         start_date: "invalid",
