@@ -12,6 +12,21 @@ jest.mock("../PatientsForm", () => () => <div data-testid="mock-patient-form" />
 
 jest.mock("../../../components/core/Table", () => () => <div data-testid="mock-table" />);
 
+const mockT = (key) => {
+  const translations = {
+    "pages.patients.search.placeholder": "Пошук за прізвищем, іменем або телефоном...",
+    "pages.patients.buttons.add": "Додати",
+  };
+  return translations[key] || key;
+};
+
+jest.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: mockT,
+    i18n: { language: "uk" },
+  }),
+}));
+
 describe("Patients UI Component", () => {
   const defaultHookValues = {
     access: { create: true, update: true, delete: true },

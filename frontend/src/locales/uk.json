@@ -1,0 +1,65 @@
+{
+  "pages": {
+    "patients": {
+      "title": "Пацієнти",
+      "search": {
+        "placeholder": "Пошук за прізвищем, іменем або телефоном..."
+      },
+      "buttons": {
+        "add": "Додати",
+        "edit": "Редагувати",
+        "delete": "Видалити",
+        "save": "Зберегти",
+        "cancel": "Скасувати"
+      },
+      "table": {
+        "columns": {
+          "id": "ID",
+          "firstName": "Ім'я",
+          "lastName": "Прізвище",
+          "email": "Email",
+          "phone": "Телефон",
+          "birthDate": "Дата народження",
+          "gender": "Стать",
+          "actions": "Дії"
+        }
+      },
+      "form": {
+        "title": {
+          "create": "Додати нового пацієнта",
+          "edit": "Редагувати пацієнта"
+        },
+        "labels": {
+          "firstName": "Ім'я",
+          "lastName": "Прізвище",
+          "middleName": "По батькові",
+          "email": "Email",
+          "phone": "Телефон",
+          "birthDate": "Дата народження",
+          "gender": "Стать",
+          "address": "Адреса"
+        },
+        "validation": {
+          "required": "Це поле обов'язкове",
+          "invalidEmail": "Неправильна електронна пошта",
+          "invalidPhone": "Неправильний номер телефону"
+        }
+      },
+      "gender": {
+        "notSpecified": "Не вказано",
+        "male": "Чоловіча",
+        "female": "Жіноча",
+        "other": "Інша"
+      },
+      "messages": {
+        "noData": "Пацієнти не знайдені",
+        "loading": "Завантаження пацієнтів...",
+        "deleteConfirm": "Ви впевнені, що хочете видалити цього пацієнта?",
+        "successCreate": "Пацієнта успішно створено",
+        "successUpdate": "Пацієнта успішно оновлено",
+        "successDelete": "Пацієнта успішно видалено",
+        "error": "Сталася помилка"
+      }
+    }
+  }
+}

@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
 import Button, { BUTTON_MODES } from "../Button";
+import LanguageSwitcher from "../LanguageSwitcher";
 
 export default function TopNavbar({ pageName, user, onLogout }) {
   return (
@@ -54,6 +55,7 @@ export default function TopNavbar({ pageName, user, onLogout }) {
         <Box
           sx={{ display: "flex", alignItems: "center", gap: 2, position: "relative", zIndex: 1 }}
         >
+          <LanguageSwitcher />
           <Typography variant="body2" color="text.secondary">
             Вітаємо, {user.username || user.name}
           </Typography>

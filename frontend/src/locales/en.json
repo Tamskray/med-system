@@ -1,0 +1,65 @@
+{
+  "pages": {
+    "patients": {
+      "title": "Patients",
+      "search": {
+        "placeholder": "Search by surname, name or phone..."
+      },
+      "buttons": {
+        "add": "Add",
+        "edit": "Edit",
+        "delete": "Delete",
+        "save": "Save",
+        "cancel": "Cancel"
+      },
+      "table": {
+        "columns": {
+          "id": "ID",
+          "firstName": "First Name",
+          "lastName": "Last Name",
+          "email": "Email",
+          "phone": "Phone",
+          "birthDate": "Date of Birth",
+          "gender": "Gender",
+          "actions": "Actions"
+        }
+      },
+      "form": {
+        "title": {
+          "create": "Add New Patient",
+          "edit": "Edit Patient"
+        },
+        "labels": {
+          "firstName": "First Name",
+          "lastName": "Last Name",
+          "middleName": "Middle Name",
+          "email": "Email",
+          "phone": "Phone",
+          "birthDate": "Date of Birth",
+          "gender": "Gender",
+          "address": "Address"
+        },
+        "validation": {
+          "required": "This field is required",
+          "invalidEmail": "Invalid email",
+          "invalidPhone": "Invalid phone number"
+        }
+      },
+      "gender": {
+        "notSpecified": "Not specified",
+        "male": "Male",
+        "female": "Female",
+        "other": "Other"
+      },
+      "messages": {
+        "noData": "No patients found",
+        "loading": "Loading patients...",
+        "deleteConfirm": "Are you sure you want to delete this patient?",
+        "successCreate": "Patient created successfully",
+        "successUpdate": "Patient updated successfully",
+        "successDelete": "Patient deleted successfully",
+        "error": "An error occurred"
+      }
+    }
+  }
+}

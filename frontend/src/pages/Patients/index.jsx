@@ -1,4 +1,5 @@
 import { usePatients } from "./usePatients";
+import { useTranslation } from "react-i18next";
 
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
@@ -15,6 +16,7 @@ import { PATIENT_FORM_MODES } from "./constants";
 import { toolbarSx, searchInputSx } from "./styles";
 
 function Patients() {
+  const { t } = useTranslation();
   const {
     access,
     search,
@@ -39,14 +41,14 @@ function Patients() {
     <Box>
       <Box sx={toolbarSx}>
         <SearchInput
-          placeholder="Пошук за прізвищем, іменем або телефоном..."
+          placeholder={t("pages.patients.search.placeholder")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           sx={searchInputSx}
         />
         {access.create && (
           <Button variant="contained" onClick={openCreateModal} disabled={isLoading}>
-            Додати
+            {t("pages.patients.buttons.add")}
           </Button>
         )}
       </Box>
