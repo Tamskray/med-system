@@ -8,13 +8,7 @@ import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
 
-import {
-  chartBoxSx,
-  filtersSx,
-  pageWrapperSx,
-  summaryPaperSx,
-  titleSx,
-} from "./styles";
+import { chartBoxSx, filtersSx, pageWrapperSx, summaryPaperSx, titleSx } from "./styles";
 import { useStatistics } from "./useStatistics";
 
 export default function Statistics() {
