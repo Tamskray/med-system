@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router";
+import { useTranslation } from "react-i18next";
 
 import { useAccess } from "../../hooks/useAccess";
 import { useConfirmModal } from "../../hooks/useConfirmModal";
@@ -17,6 +18,7 @@ import { getPatientsColumns } from "./columns.jsx";
 import { PATIENT_FORM_MODES } from "./constants";
 
 export const usePatients = () => {
+  const { t } = useTranslation();
   const access = useAccess("patients");
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -87,6 +89,7 @@ export const usePatients = () => {
   };
 
   const columns = getPatientsColumns({
+    t,
     onEdit: openEditModal,
     onDelete: deleteModal.open,
     canUpdate: access.update,

@@ -6,12 +6,6 @@ import IconButton from "@mui/material/IconButton";
 
 import Tooltip from "../../components/core/Tooltip";
 
-const GENDER_LABELS = {
-  male: "Чоловіча",
-  female: "Жіноча",
-  other: "Інша",
-};
-
 const getGenderIcon = (gender) => {
   if (gender === "male") return <PersonOutlineIcon fontSize="small" sx={{ color: "info.main" }} />;
   if (gender === "female") {
@@ -22,11 +16,11 @@ const getGenderIcon = (gender) => {
   return null;
 };
 
-export const getPatientsColumns = ({ onEdit, onDelete, canUpdate, canDelete }) => {
+export const getPatientsColumns = ({ t, onEdit, onDelete, canUpdate, canDelete }) => {
   const columns = [
     {
       key: "full_name",
-      label: "ПІБ",
+      label: t("pages.patients.table.columns.fullName"),
       width: 240,
       minWidth: 180,
       render: (row) =>
@@ -34,7 +28,7 @@ export const getPatientsColumns = ({ onEdit, onDelete, canUpdate, canDelete }) =
     },
     {
       key: "date_of_birth",
-      label: "Дата народження",
+      label: t("pages.patients.table.columns.birthDate"),
       width: 160,
       minWidth: 130,
       render: (row) =>
@@ -42,12 +36,12 @@ export const getPatientsColumns = ({ onEdit, onDelete, canUpdate, canDelete }) =
     },
     {
       key: "gender",
-      label: "Стать",
+      label: t("pages.patients.table.columns.gender"),
       width: 60,
       minWidth: 60,
       maxWidth: 60,
       render: (row) => {
-        const label = GENDER_LABELS[row.gender] || row.gender || "—";
+        const label = row.gender ? t(`pages.patients.gender.${row.gender}`) : "—";
         const icon = getGenderIcon(row.gender);
 
         if (!icon) return label;
@@ -61,14 +55,14 @@ export const getPatientsColumns = ({ onEdit, onDelete, canUpdate, canDelete }) =
     },
     {
       key: "phone",
-      label: "Телефон",
+      label: t("pages.patients.table.columns.phone"),
       width: 160,
       minWidth: 130,
       render: (row) => row.phone || "—",
     },
     {
       key: "email",
-      label: "Пошта",
+      label: t("pages.patients.table.columns.email"),
       width: 220,
       minWidth: 160,
       render: (row) => row.email || "—",
@@ -78,7 +72,7 @@ export const getPatientsColumns = ({ onEdit, onDelete, canUpdate, canDelete }) =
   if (canUpdate || canDelete) {
     columns.push({
       key: "actions",
-      label: "Дії",
+      label: t("pages.patients.table.columns.actions"),
       width: 100,
       minWidth: 80,
       maxWidth: 100,

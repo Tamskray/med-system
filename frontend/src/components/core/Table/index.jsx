@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 import InboxOutlinedIcon from "@mui/icons-material/InboxOutlined";
 import Box from "@mui/material/Box";
@@ -24,6 +25,7 @@ const Table = ({
   isLoading = false,
   onRowClick,
 }) => {
+  const { t } = useTranslation();
   const [sortBy, setSortBy] = useState(null);
   const [sortOrder, setSortOrder] = useState(ASC);
   const [page, setPage] = useState(0);
@@ -199,15 +201,13 @@ const Table = ({
           component="div"
           count={sortedData.length}
           page={page}
-          getItemAriaLabel={(type) => {
-            if (type === "next") return "Наступна сторінка";
-            if (type === "previous") return "Попередня сторінка";
-            if (type === "first") return "Перша сторінка";
-            if (type === "last") return "Остання сторінка";
-            return "";
-          }}
+          getItemAriaLabel={(type) => t(`components.table.pagination.${type}Page`)}
           labelDisplayedRows={({ from, to, count }) =>
-            `Сторінка ${page + 1} • ${to - from + 1} з ${count}`
+            t("components.table.pagination.displayedRows", {
+              page: page + 1,
+              rows: to - from + 1,
+              count,
+            })
           }
           onPageChange={(event, newPage) => setPage(newPage)}
           rowsPerPage={rowsPerPage}
@@ -222,7 +222,7 @@ const Table = ({
               "&:focus": { outline: "none" },
             },
           })}
-          labelRowsPerPage="Розмір сторінки:"
+          labelRowsPerPage={t("components.table.pagination.rowsPerPage")}
         />
       )}
     </Box>

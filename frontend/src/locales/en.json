@@ -1,4 +1,16 @@
 {
+  "components": {
+    "table": {
+      "pagination": {
+        "nextPage": "Next page",
+        "previousPage": "Previous page",
+        "firstPage": "First page",
+        "lastPage": "Last page",
+        "displayedRows": "Page {{page}} • {{rows}} of {{count}}",
+        "rowsPerPage": "Rows per page:"
+      }
+    }
+  },
   "pages": {
     "patients": {
       "title": "Patients",
@@ -15,6 +27,7 @@
       "table": {
         "columns": {
           "id": "ID",
+          "fullName": "Full name",
           "firstName": "First Name",
           "lastName": "Last Name",
           "email": "Email",

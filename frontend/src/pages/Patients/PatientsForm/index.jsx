@@ -46,6 +46,7 @@ function PatientsForm({ open, mode, initialValues, isLoading, onClose, onSubmit 
           ? t("pages.patients.buttons.save")
           : t("pages.patients.buttons.add")
       }
+      cancelText={t("pages.patients.buttons.cancel")}
       submitDisabled={isLoading}
     >
       <Box sx={fieldsGridSx}>

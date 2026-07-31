@@ -1,4 +1,16 @@
 {
+  "components": {
+    "table": {
+      "pagination": {
+        "nextPage": "Наступна сторінка",
+        "previousPage": "Попередня сторінка",
+        "firstPage": "Перша сторінка",
+        "lastPage": "Остання сторінка",
+        "displayedRows": "Сторінка {{page}} • {{rows}} з {{count}}",
+        "rowsPerPage": "Розмір сторінки:"
+      }
+    }
+  },
   "pages": {
     "patients": {
       "title": "Пацієнти",
@@ -15,6 +27,7 @@
       "table": {
         "columns": {
           "id": "ID",
+          "fullName": "ПІБ",
           "firstName": "Ім'я",
           "lastName": "Прізвище",
           "email": "Email",
