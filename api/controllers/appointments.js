@@ -10,15 +10,19 @@ export class AppointmentsController {
 
   static async getAllAppointments(req, res) {
     try {
-      const { date, doctor_id, patient_id } = req.query;
+      const { date, date_from, date_to, doctor_id, patient_id } = req.query;
       const appointments = await AppointmentsService.getAllAppointments({
         date,
+        dateFrom: date_from,
+        dateTo: date_to,
         doctorId: doctor_id,
         patientId: patient_id,
       });
       logger.info("Fetched appointments", {
         count: appointments.length,
         date: date || null,
+        date_from: date_from || null,
+        date_to: date_to || null,
         doctor_id: doctor_id || null,
         patient_id: patient_id || null,
       });

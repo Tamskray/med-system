@@ -5,6 +5,7 @@ const Schedule = lazy(() => import("../pages/Schedule"));
 const Doctors = lazy(() => import("../pages/Doctors"));
 const Patients = lazy(() => import("../pages/Patients"));
 const DoctorDashboard = lazy(() => import("../pages/DoctorDashboard"));
+const Statistics = lazy(() => import("../pages/Statistics"));
 const PatientProfile = lazy(() => import("../pages/PatientProfile"));
 const AdminUsers = lazy(() => import("../pages/AdminUsers"));
 
@@ -44,6 +45,12 @@ export const routes = [
     element: <DoctorDashboard />,
     private: true,
     module: "doctor_schedule",
+  },
+  {
+    path: "/statistics",
+    element: <Statistics />,
+    private: true,
+    module: "appointments",
   },
   {
     path: "/admin/users",

@@ -4,6 +4,7 @@ import { useLocation } from "react-router";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import EventNoteIcon from "@mui/icons-material/EventNote";
+import InsightsIcon from "@mui/icons-material/Insights";
 import LocalHospitalIcon from "@mui/icons-material/LocalHospital";
 import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
 import PeopleIcon from "@mui/icons-material/People";
@@ -27,6 +28,7 @@ export default function Sidebar({ open, toggleSidebar }) {
   const navItems = [
     { path: "/schedule", label: "Розклад", icon: ScheduleIcon },
     { path: "/doctor-dashboard", label: "Розклад лікаря", icon: EventNoteIcon },
+    { path: "/statistics", label: "Статистика", icon: InsightsIcon },
     { path: "/doctors", label: "Лікарі", icon: LocalHospitalIcon },
     { path: "/patients", label: "Пацієнти", icon: PeopleIcon },
     ...(isAdmin ? [{ path: "/admin/users", label: "Користувачі", icon: ManageAccountsIcon }] : []),

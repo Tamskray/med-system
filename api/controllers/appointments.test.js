@@ -101,6 +101,8 @@ describe("AppointmentsController", () => {
       expect(AppointmentsServiceModule.AppointmentsService.getAllAppointments).toHaveBeenCalledWith(
         {
           date: undefined,
+          dateFrom: undefined,
+          dateTo: undefined,
           doctorId: undefined,
           patientId: undefined,
         },
@@ -113,6 +115,8 @@ describe("AppointmentsController", () => {
       expect(loggerModule.default.info).toHaveBeenCalledWith("Fetched appointments", {
         count: 2,
         date: null,
+        date_from: null,
+        date_to: null,
         doctor_id: null,
         patient_id: null,
       });
@@ -137,6 +141,8 @@ describe("AppointmentsController", () => {
       expect(AppointmentsServiceModule.AppointmentsService.getAllAppointments).toHaveBeenCalledWith(
         {
           date: "2024-08-15",
+          dateFrom: undefined,
+          dateTo: undefined,
           doctorId: undefined,
           patientId: undefined,
         },
@@ -167,8 +173,27 @@ describe("AppointmentsController", () => {
       expect(AppointmentsServiceModule.AppointmentsService.getAllAppointments).toHaveBeenCalledWith(
         {
           date: undefined,
+          dateFrom: undefined,
+          dateTo: undefined,
           doctorId: "1",
           patientId: "5",
+        },
+      );
+    });
+
+    it("should forward date range filters", async () => {
+      mockReq.query = { date_from: "2024-08-01", date_to: "2024-08-15" };
+      AppointmentsServiceModule.AppointmentsService.getAllAppointments.mockResolvedValue([]);
+
+      await AppointmentsController.getAllAppointments(mockReq, mockRes);
+
+      expect(AppointmentsServiceModule.AppointmentsService.getAllAppointments).toHaveBeenCalledWith(
+        {
+          date: undefined,
+          dateFrom: "2024-08-01",
+          dateTo: "2024-08-15",
+          doctorId: undefined,
+          patientId: undefined,
         },
       );
     });
