@@ -17,7 +17,6 @@ export default function Statistics() {
     chartOptions,
     chartType,
     currentUserDoctor,
-    getDoctorFullName,
     isChartAvailable,
     isLoading,
     isLoggedInDoctor,
@@ -25,12 +24,13 @@ export default function Statistics() {
     rangeOptions,
     selectedDoctor,
     selectedDoctorId,
-    setChartType,
-    setRangeDays,
-    setSelectedDoctorId,
     sortedDoctors,
     totalAppointments,
     totalWorkload,
+    setChartType,
+    getDoctorFullName,
+    setRangeDays,
+    setSelectedDoctorId,
   } = useStatistics();
 
   return (

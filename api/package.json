@@ -5,9 +5,10 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node index.js",
-    "dev": "node --watch index.js",
-    "test": "jest"
+    "start": "tsx index.js",
+    "dev": "tsx watch index.js",
+    "test": "jest",
+    "type-check": "tsc --noEmit"
   },
   "keywords": [],
   "author": "",
@@ -25,8 +26,16 @@
   "devDependencies": {
     "@babel/core": "^8.0.1",
     "@babel/preset-env": "^8.0.2",
+    "@babel/preset-typescript": "^8.0.1",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^4.17.25",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^26.1.2",
     "babel-jest": "^30.4.1",
     "jest": "^30.4.2",
-    "nodemon": "^3.1.14"
+    "nodemon": "^3.1.14",
+    "tsx": "^4.23.5",
+    "typescript": "^7.0.2"
   }
 }
