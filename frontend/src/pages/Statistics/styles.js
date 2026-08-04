@@ -9,12 +9,26 @@ export const titleSx = {
   fontWeight: 600,
 };
 
+export const sectionTitleSx = {
+  mt: 4,
+  mb: 2,
+  fontWeight: 600,
+};
+
 export const filtersSx = {
   display: "flex",
   flexWrap: "wrap",
   gap: 2,
   alignItems: "center",
   mb: 3,
+};
+
+export const chartHeaderSx = {
+  display: "flex",
+  flexWrap: "wrap",
+  justifyContent: "space-between",
+  alignItems: "flex-start",
+  gap: 2,
 };
 
 export const summaryPaperSx = {

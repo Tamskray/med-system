@@ -8,7 +8,16 @@ import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
 
-import { chartBoxSx, filtersSx, pageWrapperSx, summaryPaperSx, titleSx } from "./styles";
+import {
+  chartBoxSx,
+  chartHeaderSx,
+  filtersSx,
+  pageWrapperSx,
+  sectionTitleSx,
+  summaryPaperSx,
+  titleSx,
+} from "./styles";
+import BarChart from "./Charts/BarChart";
 import Charts from "./Charts";
 import { useStatistics } from "./useStatistics";
 
@@ -20,6 +29,7 @@ export default function Statistics() {
     dailyCounts,
     isChartAvailable,
     isLoading,
+    isWorkloadLoading,
     rangeDays,
     rangeOptions,
     selectedDoctor,
@@ -70,20 +80,6 @@ export default function Statistics() {
             </ToggleButton>
           ))}
         </ToggleButtonGroup>
-
-        <ToggleButtonGroup
-          exclusive
-          size="small"
-          value={chartType}
-          onChange={(_, value) => value && setChartType(value)}
-          aria-label="Тип графіка"
-        >
-          {Object.entries(chartOptions).map(([value, label]) => (
-            <ToggleButton key={value} value={value}>
-              {label}
-            </ToggleButton>
-          ))}
-        </ToggleButtonGroup>
       </Box>
 
       {!isChartAvailable ? (
@@ -94,20 +90,57 @@ export default function Statistics() {
         </Box>
       ) : (
         <>
-          <Paper variant="outlined" elevation={0} sx={summaryPaperSx}>
-            <Typography variant="body2" color="text.secondary">
-              {chartType === "workload" ? "Записів у всіх лікарів" : "Записів за період"}
-            </Typography>
-            <Typography variant="h4">
-              {chartType === "workload" ? totalWorkload : totalAppointments}
-            </Typography>
-          </Paper>
+          <Box sx={chartHeaderSx}>
+            <Paper variant="outlined" elevation={0} sx={summaryPaperSx}>
+              <Typography variant="body2" color="text.secondary">
+                Записів за період
+              </Typography>
+              <Typography variant="h4">{totalAppointments}</Typography>
+            </Paper>
+
+            <ToggleButtonGroup
+              exclusive
+              size="small"
+              value={chartType}
+              onChange={(_, value) => value && setChartType(value)}
+              aria-label="Тип графіка"
+            >
+              {Object.entries(chartOptions).map(([value, label]) => (
+                <ToggleButton key={value} value={value}>
+                  {label}
+                </ToggleButton>
+              ))}
+            </ToggleButtonGroup>
+          </Box>
           <Paper variant="outlined" elevation={0} sx={chartBoxSx}>
             <Charts
               chartType={chartType}
               chartDates={chartDates}
               dailyCounts={dailyCounts}
               statusCounts={statusCounts}
+            />
+          </Paper>
+        </>
+      )}
+
+      <Typography variant="subtitle1" sx={sectionTitleSx}>
+        Навантаження лікарів
+      </Typography>
+
+      {isWorkloadLoading ? (
+        <Box sx={chartBoxSx}>
+          <CircularProgress size={28} />
+        </Box>
+      ) : (
+        <>
+          <Paper variant="outlined" elevation={0} sx={summaryPaperSx}>
+            <Typography variant="body2" color="text.secondary">
+              Записів у всіх лікарів
+            </Typography>
+            <Typography variant="h4">{totalWorkload}</Typography>
+          </Paper>
+          <Paper variant="outlined" elevation={0} sx={chartBoxSx}>
+            <BarChart
               workloadByDoctor={workloadByDoctor}
               sortedDoctors={sortedDoctors}
               getDoctorFullName={getDoctorFullName}

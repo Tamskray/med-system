@@ -20,6 +20,14 @@ const getDateRange = (days) => {
 const getDates = (dateFrom, days) =>
   Array.from({ length: days }, (_, index) => shiftIsoDate(dateFrom, index));
 
+const fetchAppointments = async (params) => {
+  const response = await apiFetch(`${API_BASE_URL}/appointments?${params.toString()}`);
+  if (!response.ok) throw new Error("Не вдалося завантажити статистику");
+
+  const result = await response.json();
+  return result.data || [];
+};
+
 export const useStatistics = () => {
   const dispatch = useDispatch();
   const { doctors } = useSelector((state) => state.doctors);
@@ -28,6 +36,8 @@ export const useStatistics = () => {
   const [chartType, setChartType] = useState(CHART_TYPES.TREND);
   const [appointments, setAppointments] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [workloadAppointments, setWorkloadAppointments] = useState([]);
+  const [isWorkloadLoading, setIsWorkloadLoading] = useState(false);
 
   const sortedDoctors = useMemo(
     () =>
@@ -62,19 +72,19 @@ export const useStatistics = () => {
   );
   const workloadByDoctor = useMemo(
     () =>
-      appointments.reduce((counts, appointment) => {
+      workloadAppointments.reduce((counts, appointment) => {
         const doctorId = String(appointment.doctor_id);
         counts[doctorId] = (counts[doctorId] || 0) + 1;
         return counts;
       }, {}),
-    [appointments],
+    [workloadAppointments],
   );
   const selectedDoctor = sortedDoctors.find(
     (doctor) => String(doctor.id) === String(selectedDoctorId),
   );
   const totalAppointments = dailyCounts.reduce((total, count) => total + count, 0);
   const totalWorkload = Object.values(workloadByDoctor).reduce((total, count) => total + count, 0);
-  const isChartAvailable = chartType === CHART_TYPES.WORKLOAD || Boolean(selectedDoctorId);
+  const isChartAvailable = Boolean(selectedDoctorId);
 
   useEffect(() => {
     dispatch(fetchDoctors());
@@ -84,22 +94,20 @@ export const useStatistics = () => {
     let isActive = true;
 
     const loadAppointments = async () => {
-      const requiresDoctor = chartType !== CHART_TYPES.WORKLOAD;
-      if (requiresDoctor && !selectedDoctorId) {
+      if (!selectedDoctorId) {
         setAppointments([]);
         return;
       }
 
       setIsLoading(true);
       try {
-        const params = new URLSearchParams({ date_from: dateFrom, date_to: dateTo });
-        if (requiresDoctor) params.set("doctor_id", selectedDoctorId);
-
-        const response = await apiFetch(`${API_BASE_URL}/appointments?${params.toString()}`);
-        if (!response.ok) throw new Error("Не вдалося завантажити статистику");
-
-        const result = await response.json();
-        if (isActive) setAppointments(result.data || []);
+        const params = new URLSearchParams({
+          date_from: dateFrom,
+          date_to: dateTo,
+          doctor_id: selectedDoctorId,
+        });
+        const data = await fetchAppointments(params);
+        if (isActive) setAppointments(data);
       } catch (error) {
         if (isActive) setAppointments([]);
         showErrorToast(error.message || "Не вдалося завантажити статистику");
@@ -112,7 +120,30 @@ export const useStatistics = () => {
     return () => {
       isActive = false;
     };
-  }, [chartType, dateFrom, dateTo, selectedDoctorId]);
+  }, [dateFrom, dateTo, selectedDoctorId]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    const loadWorkload = async () => {
+      setIsWorkloadLoading(true);
+      try {
+        const params = new URLSearchParams({ date_from: dateFrom, date_to: dateTo });
+        const data = await fetchAppointments(params);
+        if (isActive) setWorkloadAppointments(data);
+      } catch (error) {
+        if (isActive) setWorkloadAppointments([]);
+        showErrorToast(error.message || "Не вдалося завантажити статистику");
+      } finally {
+        if (isActive) setIsWorkloadLoading(false);
+      }
+    };
+
+    loadWorkload();
+    return () => {
+      isActive = false;
+    };
+  }, [dateFrom, dateTo]);
 
   return {
     chartDates,
@@ -122,6 +153,7 @@ export const useStatistics = () => {
     getDoctorFullName,
     isChartAvailable,
     isLoading,
+    isWorkloadLoading,
     rangeDays,
     rangeOptions: RANGE_OPTIONS,
     selectedDoctor,

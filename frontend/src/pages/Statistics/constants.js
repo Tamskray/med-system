@@ -10,5 +10,4 @@ export const RANGE_OPTIONS = [
 export const CHART_OPTIONS = {
   [CHART_TYPES.TREND]: "Динаміка",
   [CHART_TYPES.STATUS]: "Статуси",
-  [CHART_TYPES.WORKLOAD]: "Навантаження",
 };

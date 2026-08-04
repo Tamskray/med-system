@@ -1,7 +1,6 @@
 export const CHART_TYPES = {
   TREND: "trend",
   STATUS: "status",
-  WORKLOAD: "workload",
 };
 
 export const STATUS_COLORS = {
