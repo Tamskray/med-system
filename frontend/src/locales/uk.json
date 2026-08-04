@@ -73,6 +73,29 @@
         "successDelete": "Пацієнта успішно видалено",
         "error": "Сталася помилка"
       }
+    },
+    "statistics": {
+      "title": "Статистика записів",
+      "selectDoctor": "Оберіть лікаря",
+      "selectDoctorPrompt": "Оберіть лікаря для перегляду статистики",
+      "period": {
+        "twoDays": "2 дні",
+        "week": "7 днів",
+        "twoWeeks": "2 тижні",
+        "month": "Місяць"
+      },
+      "chartType": {
+        "label": "Тип графіка",
+        "trend": "Динаміка",
+        "status": "Статуси"
+      },
+      "appointmentsInPeriod": "Записів за період",
+      "doctorsWorkload": "Навантаження лікарів",
+      "appointmentsAllDoctors": "Записів у всіх лікарів",
+      "unknownDoctor": "Невідомий лікар",
+      "appointmentsSeries": "Записів",
+      "noStatus": "Без статусу",
+      "loadError": "Не вдалося завантажити статистику"
     }
   }
 }

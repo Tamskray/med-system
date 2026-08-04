@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useTranslation } from "react-i18next";
 
 import { fetchDoctors } from "../../redux/slices/doctors";
 import { apiFetch } from "../../utils/api";
@@ -22,13 +23,14 @@ const getDates = (dateFrom, days) =>
 
 const fetchAppointments = async (params) => {
   const response = await apiFetch(`${API_BASE_URL}/appointments?${params.toString()}`);
-  if (!response.ok) throw new Error("Не вдалося завантажити статистику");
+  if (!response.ok) throw new Error("Failed to load statistics");
 
   const result = await response.json();
   return result.data || [];
 };
 
 export const useStatistics = () => {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const { doctors } = useSelector((state) => state.doctors);
   const [selectedDoctorId, setSelectedDoctorId] = useState("");
@@ -64,11 +66,11 @@ export const useStatistics = () => {
   const statusCounts = useMemo(
     () =>
       appointments.reduce((counts, appointment) => {
-        const status = appointment.status || "Без статусу";
+        const status = appointment.status || t("pages.statistics.noStatus");
         counts[status] = (counts[status] || 0) + 1;
         return counts;
       }, {}),
-    [appointments],
+    [appointments, t],
   );
   const workloadByDoctor = useMemo(
     () =>
@@ -108,9 +110,9 @@ export const useStatistics = () => {
         });
         const data = await fetchAppointments(params);
         if (isActive) setAppointments(data);
-      } catch (error) {
+      } catch {
         if (isActive) setAppointments([]);
-        showErrorToast(error.message || "Не вдалося завантажити статистику");
+        showErrorToast(t("pages.statistics.loadError"));
       } finally {
         if (isActive) setIsLoading(false);
       }
@@ -131,9 +133,9 @@ export const useStatistics = () => {
         const params = new URLSearchParams({ date_from: dateFrom, date_to: dateTo });
         const data = await fetchAppointments(params);
         if (isActive) setWorkloadAppointments(data);
-      } catch (error) {
+      } catch {
         if (isActive) setWorkloadAppointments([]);
-        showErrorToast(error.message || "Не вдалося завантажити статистику");
+        showErrorToast(t("pages.statistics.loadError"));
       } finally {
         if (isActive) setIsWorkloadLoading(false);
       }

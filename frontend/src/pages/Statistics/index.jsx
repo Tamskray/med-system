@@ -7,6 +7,7 @@ import Select from "@mui/material/Select";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
+import { useTranslation } from "react-i18next";
 
 import {
   chartBoxSx,
@@ -22,6 +23,7 @@ import Charts from "./Charts";
 import { useStatistics } from "./useStatistics";
 
 export default function Statistics() {
+  const { t } = useTranslation();
   const {
     chartDates,
     chartOptions,
@@ -48,7 +50,7 @@ export default function Statistics() {
   return (
     <Box sx={pageWrapperSx}>
       <Typography variant="h6" sx={titleSx}>
-        Статистика записів
+        {t("pages.statistics.title")}
       </Typography>
 
       <Box sx={filtersSx}>
@@ -57,9 +59,11 @@ export default function Statistics() {
             displayEmpty
             value={selectedDoctorId}
             onChange={(event) => setSelectedDoctorId(event.target.value)}
-            renderValue={(value) => (value ? getDoctorFullName(selectedDoctor) : "Оберіть лікаря")}
+            renderValue={(value) =>
+              value ? getDoctorFullName(selectedDoctor) : t("pages.statistics.selectDoctor")
+            }
           >
-            <MenuItem value="">Оберіть лікаря</MenuItem>
+            <MenuItem value="">{t("pages.statistics.selectDoctor")}</MenuItem>
             {sortedDoctors.map((doctor) => (
               <MenuItem key={doctor.id} value={doctor.id}>
                 {getDoctorFullName(doctor)}
@@ -76,14 +80,14 @@ export default function Statistics() {
         >
           {rangeOptions.map((option) => (
             <ToggleButton key={option.value} value={option.value}>
-              {option.label}
+              {t(option.labelKey)}
             </ToggleButton>
           ))}
         </ToggleButtonGroup>
       </Box>
 
       {!isChartAvailable ? (
-        <Typography color="text.secondary">Оберіть лікаря для перегляду статистики</Typography>
+        <Typography color="text.secondary">{t("pages.statistics.selectDoctorPrompt")}</Typography>
       ) : isLoading ? (
         <Box sx={chartBoxSx}>
           <CircularProgress size={28} />
@@ -93,7 +97,7 @@ export default function Statistics() {
           <Box sx={chartHeaderSx}>
             <Paper variant="outlined" elevation={0} sx={summaryPaperSx}>
               <Typography variant="body2" color="text.secondary">
-                Записів за період
+                {t("pages.statistics.appointmentsInPeriod")}
               </Typography>
               <Typography variant="h4">{totalAppointments}</Typography>
             </Paper>
@@ -103,11 +107,11 @@ export default function Statistics() {
               size="small"
               value={chartType}
               onChange={(_, value) => value && setChartType(value)}
-              aria-label="Тип графіка"
+              aria-label={t("pages.statistics.chartType.label")}
             >
-              {Object.entries(chartOptions).map(([value, label]) => (
+              {Object.entries(chartOptions).map(([value, labelKey]) => (
                 <ToggleButton key={value} value={value}>
-                  {label}
+                  {t(labelKey)}
                 </ToggleButton>
               ))}
             </ToggleButtonGroup>
@@ -124,7 +128,7 @@ export default function Statistics() {
       )}
 
       <Typography variant="subtitle1" sx={sectionTitleSx}>
-        Навантаження лікарів
+        {t("pages.statistics.doctorsWorkload")}
       </Typography>
 
       {isWorkloadLoading ? (
@@ -135,7 +139,7 @@ export default function Statistics() {
         <>
           <Paper variant="outlined" elevation={0} sx={summaryPaperSx}>
             <Typography variant="body2" color="text.secondary">
-              Записів у всіх лікарів
+              {t("pages.statistics.appointmentsAllDoctors")}
             </Typography>
             <Typography variant="h4">{totalWorkload}</Typography>
           </Paper>

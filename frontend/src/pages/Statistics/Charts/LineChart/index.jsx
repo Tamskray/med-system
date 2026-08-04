@@ -8,25 +8,31 @@ import {
   Tooltip,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
+import { useTranslation } from "react-i18next";
 
 import { PRIMARY_CHART_COLOR } from "../constants";
 import { getLineChartOptions } from "./options";
 
 Chart.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip);
 
-const formatDateLabel = (isoDate) => {
+const DATE_LOCALES = { uk: "uk-UA", en: "en-US" };
+
+const formatDateLabel = (isoDate, locale) => {
   const [year, month, day] = isoDate.split("-").map(Number);
-  return new Intl.DateTimeFormat("uk-UA", { day: "numeric", month: "short" }).format(
+  return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short" }).format(
     new Date(year, month - 1, day),
   );
 };
 
 export default function LineChart({ chartDates, dailyCounts }) {
+  const { t, i18n } = useTranslation();
+  const locale = DATE_LOCALES[i18n.language] || DATE_LOCALES.uk;
+
   const data = {
-    labels: chartDates.map(formatDateLabel),
+    labels: chartDates.map((date) => formatDateLabel(date, locale)),
     datasets: [
       {
-        label: "Записів",
+        label: t("pages.statistics.appointmentsSeries"),
         data: dailyCounts,
         borderColor: PRIMARY_CHART_COLOR,
         backgroundColor: "rgba(0, 137, 123, 0.12)",

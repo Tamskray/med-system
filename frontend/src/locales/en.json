@@ -73,6 +73,29 @@
         "successDelete": "Patient deleted successfully",
         "error": "An error occurred"
       }
+    },
+    "statistics": {
+      "title": "Appointment statistics",
+      "selectDoctor": "Select doctor",
+      "selectDoctorPrompt": "Select a doctor to view statistics",
+      "period": {
+        "twoDays": "2 days",
+        "week": "7 days",
+        "twoWeeks": "2 weeks",
+        "month": "Month"
+      },
+      "chartType": {
+        "label": "Chart type",
+        "trend": "Trend",
+        "status": "Statuses"
+      },
+      "appointmentsInPeriod": "Appointments in period",
+      "doctorsWorkload": "Doctors' workload",
+      "appointmentsAllDoctors": "Appointments for all doctors",
+      "unknownDoctor": "Unknown doctor",
+      "appointmentsSeries": "Appointments",
+      "noStatus": "No status",
+      "loadError": "Failed to load statistics"
     }
   }
 }
