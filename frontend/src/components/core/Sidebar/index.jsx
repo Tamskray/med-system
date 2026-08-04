@@ -28,9 +28,9 @@ export default function Sidebar({ open, toggleSidebar }) {
   const navItems = [
     { path: "/schedule", label: "Розклад", icon: ScheduleIcon },
     { path: "/doctor-dashboard", label: "Розклад лікаря", icon: EventNoteIcon },
-    { path: "/statistics", label: "Статистика", icon: InsightsIcon },
     { path: "/doctors", label: "Лікарі", icon: LocalHospitalIcon },
     { path: "/patients", label: "Пацієнти", icon: PeopleIcon },
+    { path: "/statistics", label: "Статистика", icon: InsightsIcon },
     ...(isAdmin ? [{ path: "/admin/users", label: "Користувачі", icon: ManageAccountsIcon }] : []),
   ];
 
